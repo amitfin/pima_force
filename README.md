@@ -30,9 +30,9 @@ The integration should also be added to the configuration. This can be done usin
 
 There are 2 fields:
 1. `Port`: the port to listen for incoming events. The default is `10001`, which is also the default port in the alarm. It should be kept as is unless there is a specific reason not to.
-2. `Zone names`: an ordered list of zones that should be copied from the alarm's zone list. If a specific zone in the alarm is not used, it is possible to create an empty item. For example, if the alarm has 3 zones: "zone 1: door, zone 2: [not used], zone 3: window", the list should be "door, [empty], window".
+2. `Zone names`: an ordered list of zones that should be copied from the alarm's zone list. If a specific zone in the alarm is not used, there should be a corresponding empty item on the list. For example, if the alarm has 3 zones: "zone 1: door, zone 2: [not used], zone 3: window", the list should be "door, [empty], window".
 
-Once the component is installed, it can be reconfigured using the Configure dialog, which can be accessed via this My button:
+After the component is installed, it can be reconfigured using the Configure dialog, which can be accessed via this My button:
 
 [![Open your Home Assistant instance and show an integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=pima_force)
 
@@ -45,7 +45,7 @@ There are 3 sets of codes:
 2) Master user code: opens additional options in the user menu.
 3) Master technician code: a different menu used by installers to set up the system.
 
-The setup can be done only with the master technician code. User codes, either regular or master, are not enough. Please make sure you know the master technician code before proceeding. The rest of the instructions assume you entered the technician menu by entering the master technician code.
+This setup can be done only with the master technician code. User codes, either regular or master, are not enough. Please make sure you know the master technician code before proceeding. The rest of the instructions assume you entered the technician menu by entering the master technician code.
 
 ### Keyboard
 
@@ -72,7 +72,7 @@ Home Assistant IP:port should be configured as a Central Monitoring Station (CMS
 
 ## Binary Sensors
 
-The integration creates a binary sensor for each zone. It skips zones with an empty name.
+The integration creates a binary sensor for each zone. It skips zones with an empty name (but it takes empty zones into account for numbering correctly the rest of the zones).
 
 The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For example: `binary_sensor.pima_force_10001_zone5`.
 
