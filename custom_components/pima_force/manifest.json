@@ -1,0 +1,19 @@
+{
+  "domain": "pima_force",
+  "name": "Pima Force",
+  "codeowners": [
+    "@amitfin"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/amitfin/pima_force",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/amitfin/pima_force/issues",
+  "loggers": [
+    "pysiaalarm"
+  ],
+  "requirements": [
+    "pysiaalarm"
+  ],
+  "version": "1.0.0"
+}

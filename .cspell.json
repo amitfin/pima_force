@@ -1,0 +1,23 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "amitfin",
+    "autouse",
+    "caplog",
+    "codeowners",
+    "conftest",
+    "freezegun",
+    "HACS",
+    "hass",
+    "homeassistant",
+    "hookwrapper",
+    "levelname",
+    "levelno",
+    "mypy",
+    "pysiaalarm",
+    "pytest",
+    "PYTHONPATH",
+    "timeband"
+  ]
+}

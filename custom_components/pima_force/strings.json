@@ -1,0 +1,33 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Setup Pima Force",
+                "data": {
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "zones": "Zone Names"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configure Pima Force",
+                "data": {
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "zones": "Zone Names"
+                }
+            }
+        }
+    },
+    "selector": {
+        "zone": {
+            "fields": {
+                "name": {
+                    "name": "Zone Name (leave empty if unused)"
+                }
+            }
+        }
+    }
+}
