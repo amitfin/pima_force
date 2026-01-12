@@ -25,7 +25,8 @@
         "zone": {
             "fields": {
                 "name": {
-                    "name": "Zone Name (leave empty if unused)"
+                    "name": "Zone Name (leave empty if unused)",
+                    "description": "Name of the zone as it will appear in Home Assistant."
                 }
             }
         }

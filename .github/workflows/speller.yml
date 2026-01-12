@@ -31,3 +31,4 @@ jobs:
             !.ruff.toml
             !LICENSE
             !pytest.ini
+            !config/*

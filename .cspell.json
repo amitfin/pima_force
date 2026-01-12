@@ -18,6 +18,7 @@
     "pysiaalarm",
     "pytest",
     "PYTHONPATH",
-    "timeband"
+    "timeband",
+    "venv"
   ]
 }
