@@ -127,6 +127,28 @@ Here is an example of a markdown card which lists all zones sorted by their last
 | <img width="477" height="316" alt="image" src="https://github.com/user-attachments/assets/41395634-9b5a-47e2-abfd-8552c646a1aa" /> |
 | --- |
 
+## Automation
+
+The sensors can be used also in automation rules. For example,
+
+```yaml
+alias: Safe is open
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.pima_force_10001_zone999  # safe's zone
+    to: "on"
+actions:
+  - action: notify.mobile_app
+    data:
+      title: Alarm System
+      message: Safe is open!
+```
+
+Another ideas can be: 
+- Turning on lights using motion sensors.
+- Use motion sensors for presence (or absence) detection.
+- Notify on door sensors, for example, when the backyard door (the pool area) is open.
+
 ## Uninstall
 
 1. **Delete the configuration:**
