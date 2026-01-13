@@ -85,6 +85,44 @@ Each sensor exposes timestamp attributes (local time, ISO 8601):
 
 The state is restored after Home Assistant restarts, but events that occur during downtime can be missed. For example, if a door opens while Home Assistant is rebooting, the sensor will still show "closed" (`off`) until the next change. Because the alarm only sends events on changes (not periodically), any mismatch is corrected the next time that zone reports a change.
 
+## Dashboard
+
+Here is an example of a markdown card which lists all sensors sorted by their last status change:
+
+```yaml
+- type: markdown
+  content: |
+    | Sensor | Changed | Open | Closed |
+    |--------|---------|------|--------|
+    {% set valid = states.binary_sensor | 
+         selectattr('entity_id', 'in', integration_entities('pima_force')) |
+         rejectattr('attributes.last_toggle', 'eq', none) | 
+         rejectattr('attributes.last_open', 'eq', none) |
+         rejectattr('attributes.last_close', 'eq', none) |
+         map(attribute='entity_id') |
+         list 
+    -%} 
+    {% for sensor in states.binary_sensor | 
+         selectattr('entity_id', 'in', integration_entities('pima_force')) |
+         selectattr('entity_id', 'in', valid) |
+         sort(attribute='attributes.last_toggle', reverse=True) 
+    -%} 
+    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | 
+    {{- as_timestamp(sensor.attributes.last_toggle) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
+    {{- as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
+    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
+    {% endfor %} 
+    {%- for sensor in states.binary_sensor | 
+         selectattr('entity_id', 'in', integration_entities('pima_force')) |
+         rejectattr('entity_id', 'in', valid) |
+         sort(attribute='attributes.friendly_name')
+    -%} 
+    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | - | - | - | 
+    {% endfor %}
+```
+
+<img width="503" height="329" alt="image" src="https://github.com/user-attachments/assets/bfcf8f06-5059-473a-9bf4-9848e5e92999" />
+
 ## Uninstall
 
 1. **Delete the configuration:**
