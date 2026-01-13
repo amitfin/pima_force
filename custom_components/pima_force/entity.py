@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_MANUFACTURER, DEVICE_MODEL, DEVICE_NAME, DOMAIN
+from .const import DEVICE_MANUFACTURER, DEVICE_MODEL, DOMAIN
 from .coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class PimaForceEntity(CoordinatorEntity[PimaForceDataUpdateCoordinator]):
         super().__init__(config_entry.runtime_data.coordinator)
         self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
-            name=DEVICE_NAME,
+            translation_key="default",
             manufacturer=DEVICE_MANUFACTURER,
             model=DEVICE_MODEL,
             identifiers={(DOMAIN, config_entry.entry_id)},

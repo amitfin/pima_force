@@ -31,7 +31,7 @@ async def test_entity_device_info(hass: HomeAssistant) -> None:
     device_info = entity.device_info
 
     assert device_info is not None
-    assert device_info.get("name") == "Pima Force"
+    assert device_info.get("translation_key") == "default"
     assert device_info.get("manufacturer") == "Pima"
     assert device_info.get("model") == "Force"
     assert device_info.get("identifiers") == {(DOMAIN, config_entry.entry_id)}
