@@ -2,7 +2,7 @@
     "name": "Pima Force",
     "filename": "pima_force.zip",
     "hide_default_branch": true,
-    "homeassistant": "2026.2.0",
+    "homeassistant": "2026.1.0",
     "render_readme": true,
     "zip_release": true
 }
