@@ -121,7 +121,8 @@ Here is an example of a markdown card which lists all sensors sorted by their la
     {% endfor %}
 ```
 
-<img width="503" height="329" alt="image" src="https://github.com/user-attachments/assets/bfcf8f06-5059-473a-9bf4-9848e5e92999" />
+<img width="503" height="279" alt="image" src="https://github.com/user-attachments/assets/cf6da255-89ee-4e4d-a5d1-70e1af7c3e3b" />
+
 
 ## Uninstall
 
