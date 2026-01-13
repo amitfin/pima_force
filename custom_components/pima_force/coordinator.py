@@ -16,7 +16,7 @@ from .const import (
     ADM_CID_PIMA_ZONE_STATUS_CODE,
     DOMAIN,
     LOGGER,
-    # SIA_PIMA_KEEP_CONNECTED_QUALIFIER,
+    SIA_PIMA_KEEP_CONNECTED_QUALIFIER,
 )
 
 if TYPE_CHECKING:
@@ -44,8 +44,8 @@ class PimaForceDataUpdateCoordinator(DataUpdateCoordinator):
             [
                 SIAAccount(
                     "",
-                    # allowed_timeband=None,  # noqa: ERA001
-                    # response_qualifier=SIA_PIMA_KEEP_CONNECTED_QUALIFIER,  # noqa: E501, ERA001
+                    allowed_timeband=None,
+                    response_qualifier=SIA_PIMA_KEEP_CONNECTED_QUALIFIER,
                 )
             ],
             self.process_event,
