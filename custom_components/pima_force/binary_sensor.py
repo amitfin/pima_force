@@ -7,8 +7,15 @@ from typing import TYPE_CHECKING
 from homeassistant.components import binary_sensor
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_ON
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_ZONES, DOMAIN
+from .const import (
+    ATTR_LAST_CLOSE,
+    ATTR_LAST_OPEN,
+    ATTR_LAST_TOGGLE,
+    CONF_ZONES,
+    DOMAIN,
+)
 from .entity import PimaForceEntity
 
 if TYPE_CHECKING:
@@ -43,6 +50,9 @@ class PimaForceZoneBinarySensor(
     """Representation of the alert sensor base."""
 
     _attr_device_class = binary_sensor.BinarySensorDeviceClass.DOOR
+    _unrecorded_attributes = frozenset(
+        {ATTR_LAST_OPEN, ATTR_LAST_CLOSE, ATTR_LAST_TOGGLE}
+    )
 
     def __init__(
         self, config_entry: PimaForceConfigEntry, zone: int, name: str
@@ -55,6 +65,11 @@ class PimaForceZoneBinarySensor(
         )
         self._attr_name = name
         self._attr_is_on = False
+        self._attr_extra_state_attributes = {
+            ATTR_LAST_OPEN: None,
+            ATTR_LAST_CLOSE: None,
+            ATTR_LAST_TOGGLE: None,
+        }
         self._zone = zone
 
     async def async_added_to_hass(self) -> None:
@@ -62,11 +77,20 @@ class PimaForceZoneBinarySensor(
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
             self._attr_is_on = last_state.state == STATE_ON
+            for key in self._attr_extra_state_attributes:
+                if key in last_state.attributes:
+                    self._attr_extra_state_attributes[key] = last_state.attributes[key]
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (
             new_state := self.coordinator.zones.get(self._zone)
         ) is not None and new_state != self._attr_is_on:
+            now = dt_util.now().isoformat()
+            self._attr_extra_state_attributes[ATTR_LAST_TOGGLE] = now
+            if new_state:
+                self._attr_extra_state_attributes[ATTR_LAST_OPEN] = now
+            else:
+                self._attr_extra_state_attributes[ATTR_LAST_CLOSE] = now
             self._attr_is_on = new_state
             super()._handle_coordinator_update()

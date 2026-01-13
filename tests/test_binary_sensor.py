@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import State
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force import PimaForceRuntimeData
@@ -16,6 +18,9 @@ from custom_components.pima_force.binary_sensor import (
     async_setup_entry,
 )
 from custom_components.pima_force.const import (
+    ATTR_LAST_CLOSE,
+    ATTR_LAST_OPEN,
+    ATTR_LAST_TOGGLE,
     CONF_ZONES,
     DEFAULT_LISTENING_PORT,
     DOMAIN,
@@ -23,11 +28,18 @@ from custom_components.pima_force.const import (
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:
+    from freezegun.api import FrozenDateTimeFactory
     from homeassistant.core import HomeAssistant
 
 
 def _stored_state(entity_id: str, state: str) -> State:
     return State(entity_id, state)
+
+
+def _stored_state_with_attrs(
+    entity_id: str, state: str, attributes: dict[str, str | None]
+) -> State:
+    return State(entity_id, state, attributes=attributes)
 
 
 async def test_async_setup_entry_adds_named_zones(hass: HomeAssistant) -> None:
@@ -188,6 +200,91 @@ async def test_handle_update_skips_unchanged_state(
     coordinator.async_update_listeners()
 
     write_state.assert_not_called()
+
+
+async def test_handle_update_sets_timestamps(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test timestamp attributes are updated on state changes."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_PORT: DEFAULT_LISTENING_PORT},
+    )
+    coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
+    config_entry.runtime_data = PimaForceRuntimeData(coordinator)
+
+    sensor = PimaForceZoneBinarySensor(config_entry, 6, "Basement")
+    sensor.hass = hass
+    monkeypatch.setattr(sensor, "async_get_last_state", AsyncMock(return_value=None))
+    monkeypatch.setattr(sensor, "async_write_ha_state", MagicMock())
+
+    await sensor.async_added_to_hass()
+
+    tz = dt_util.get_time_zone("America/New_York")
+    old_tz = dt_util.DEFAULT_TIME_ZONE
+    dt_util.set_default_time_zone(tz)
+    try:
+        freezer.move_to(datetime(2024, 1, 1, 0, 0, 0, tzinfo=tz))
+        coordinator.zones[6] = True
+        coordinator.async_update_listeners()
+
+        assert sensor.extra_state_attributes == {
+            ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
+            ATTR_LAST_CLOSE: None,
+            ATTR_LAST_TOGGLE: "2024-01-01T00:00:00-05:00",
+        }
+
+        freezer.move_to(datetime(2024, 1, 1, 0, 10, 0, tzinfo=tz))
+        coordinator.zones[6] = False
+        coordinator.async_update_listeners()
+
+        assert sensor.extra_state_attributes == {
+            ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
+            ATTR_LAST_CLOSE: "2024-01-01T00:10:00-05:00",
+            ATTR_LAST_TOGGLE: "2024-01-01T00:10:00-05:00",
+        }
+    finally:
+        dt_util.set_default_time_zone(old_tz)
+
+
+async def test_restores_timestamp_attributes(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test timestamp attributes are restored from stored state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_PORT: DEFAULT_LISTENING_PORT},
+    )
+    config_entry.runtime_data = PimaForceRuntimeData(
+        PimaForceDataUpdateCoordinator(hass, config_entry)
+    )
+
+    sensor = PimaForceZoneBinarySensor(config_entry, 7, "Side Door")
+    monkeypatch.setattr(
+        sensor,
+        "async_get_last_state",
+        AsyncMock(
+            return_value=_stored_state_with_attrs(
+                "binary_sensor.side_door",
+                STATE_ON,
+                {
+                    ATTR_LAST_OPEN: "2024-01-01T01:00:00+00:00",
+                    ATTR_LAST_CLOSE: "2023-12-31T23:00:00+00:00",
+                    ATTR_LAST_TOGGLE: "2024-01-01T01:00:00+00:00",
+                },
+            )
+        ),
+    )
+
+    await sensor.async_added_to_hass()
+
+    assert sensor.extra_state_attributes == {
+        ATTR_LAST_OPEN: "2024-01-01T01:00:00+00:00",
+        ATTR_LAST_CLOSE: "2023-12-31T23:00:00+00:00",
+        ATTR_LAST_TOGGLE: "2024-01-01T01:00:00+00:00",
+    }
 
 
 def _zone_unique_ids(entry_id: str, zones: list[int]) -> list[str]:

@@ -78,6 +78,11 @@ The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For
 
 The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/).
 
+Each sensor exposes timestamp attributes (local time, ISO 8601):
+- `last_open`: last time the zone reported open.
+- `last_close`: last time the zone reported closed.
+- `last_toggle`: last time the zone state changed.
+
 The state is restored after Home Assistant restarts, but events that occur during downtime can be missed. For example, if a door opens while Home Assistant is rebooting, the sensor will still show "closed" (`off`) until the next change. Because the alarm only sends events on changes (not periodically), any mismatch is corrected the next time that zone reports a change.
 
 ## Uninstall
