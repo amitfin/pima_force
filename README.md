@@ -36,6 +36,9 @@ After the component is installed, it can be reconfigured using the Configure dia
 
 [![Open your Home Assistant instance and show an integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=pima_force)
 
+| <img width="396" height="429" alt="image" src="https://github.com/user-attachments/assets/f9b88109-ea7f-431e-a865-def673b9c813" /> |
+| --- |
+
 ## Pima Force Setup
 
 ### Codes
@@ -87,12 +90,12 @@ The state is restored after Home Assistant restarts, but events that occur durin
 
 ## Dashboard
 
-Here is an example of a markdown card which lists all sensors sorted by their last status change:
+Here is an example of a markdown card which lists all zones sorted by their last status change:
 
 ```yaml
 - type: markdown
   content: |
-    | Sensor | Changed | Open | Closed |
+    | Zone | Changed | Open | Closed |
     |--------|---------|------|--------|
     {% set valid = states.binary_sensor | 
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
@@ -121,8 +124,8 @@ Here is an example of a markdown card which lists all sensors sorted by their la
     {% endfor %}
 ```
 
-<img width="503" height="279" alt="image" src="https://github.com/user-attachments/assets/cf6da255-89ee-4e4d-a5d1-70e1af7c3e3b" />
-
+| <img width="477" height="316" alt="image" src="https://github.com/user-attachments/assets/41395634-9b5a-47e2-abfd-8552c646a1aa" /> |
+| --- |
 
 ## Uninstall
 
