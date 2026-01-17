@@ -35,5 +35,17 @@
         "default": {
             "name": "פימא פורס"
         }
+    },
+    "services": {
+        "get_zones": {
+            "name": "קריאת האזורים",
+            "description": "החזרת שמות האזורים.",
+            "fields": {
+                "config_entry_id": {
+                    "name": "מזהה רשומת תצורה",
+                    "description": "מזהה רשומת התצורה שממנה יקראו האזורים."
+                }
+            }
+        }
     }
 }

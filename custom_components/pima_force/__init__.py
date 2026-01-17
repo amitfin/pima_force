@@ -4,17 +4,30 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import voluptuous as vol
 from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, Platform
+from homeassistant.core import ServiceResponse, SupportsResponse, callback
+from homeassistant.helpers import selector
+
+from custom_components.pima_force.const import CONF_ZONES, DOMAIN, SERVICE_GET_ZONES
 
 from .coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 
 PLATFORMS = (Platform.BINARY_SENSOR,)
+SERVICE_GET_ZONES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+            selector.ConfigEntrySelectorConfig(integration=DOMAIN)
+        )
+    }
+)
 
 
 @dataclass
@@ -25,6 +38,34 @@ class PimaForceRuntimeData:
 
 
 type PimaForceConfigEntry = ConfigEntry[PimaForceRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
+    """Set up the integration."""
+
+    @callback
+    async def async_get_zones(call: ServiceCall) -> ServiceResponse:
+        """Return zone list."""
+        if config_entry := hass.config_entries.async_get_entry(
+            call.data[ATTR_CONFIG_ENTRY_ID]
+        ):
+            return {
+                CONF_ZONES: [
+                    zone.get(CONF_NAME, "")
+                    for zone in config_entry.options.get(CONF_ZONES, [])
+                ]
+            }
+        return None
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_ZONES,
+        async_get_zones,
+        schema=SERVICE_GET_ZONES_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PimaForceConfigEntry) -> bool:

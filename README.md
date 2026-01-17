@@ -150,6 +150,16 @@ Another ideas can be:
 - Use motion sensors for presence (or absence) detection.
 - Notify on door sensors, for example, when the backyard door (the pool area) is open.
 
+## Services
+
+The integration exposes a service to fetch configured zone names:
+
+```yaml
+service: pima_force.get_zones
+data:
+  config_entry_id: 1234567890abcdef1234567890abcdef
+```
+
 ## Uninstall
 
 1. **Delete the configuration:**

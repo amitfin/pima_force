@@ -35,5 +35,17 @@
         "default": {
             "name": "Pima Force"
         }
+    },
+    "services": {
+        "get_zones": {
+            "name": "Get zones",
+            "description": "Return the zone list.",
+            "fields": {
+                "config_entry_id": {
+                    "name": "Config entry ID",
+                    "description": "Config entry ID to read zones from."
+                }
+            }
+        }
     }
 }

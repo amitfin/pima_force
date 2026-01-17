@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_zones": {
+      "icon": "mdi:format-list-bulleted"
+    }
+  }
+}

@@ -5,18 +5,26 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.const import CONF_PORT, Platform
+import pytest
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
+from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
 from custom_components.pima_force import (
     PimaForceRuntimeData,
+    async_setup,
     async_setup_entry,
     async_unload_entry,
     config_entry_update_listener,
 )
-from custom_components.pima_force.const import DEFAULT_LISTENING_PORT, DOMAIN
+from custom_components.pima_force.const import (
+    CONF_ZONES,
+    DEFAULT_LISTENING_PORT,
+    DOMAIN,
+    SERVICE_GET_ZONES,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -33,6 +41,33 @@ async def test_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_setup_get_zones_action(hass: HomeAssistant) -> None:
+    """Test get_zones service returns configured zone names."""
+    zones = [{CONF_NAME: "Front Door"}, {CONF_NAME: ""}]
+    config_entry = MockConfigEntry(domain=DOMAIN, options={CONF_ZONES: zones})
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup(hass, {})
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_ZONES,
+        {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {CONF_ZONES: ["Front Door", ""]}
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_ZONES,
+            {ATTR_CONFIG_ENTRY_ID: "missing_entry"},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

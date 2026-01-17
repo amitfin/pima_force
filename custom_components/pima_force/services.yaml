@@ -1,0 +1,7 @@
+get_zones:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: pima_force
