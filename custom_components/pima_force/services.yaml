@@ -5,3 +5,22 @@ get_zones:
       selector:
         config_entry:
           integration: pima_force
+  example:
+    config_entry_id: 1234567890abcdef1234567890abcdef
+set_zones:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: pima_force
+    zones:
+      required: true
+      selector:
+        object:
+  example:
+    config_entry_id: 1234567890abcdef1234567890abcdef
+    zones:
+      - Front Door
+      - ""
+      - Back Door

@@ -10,6 +10,7 @@ LOGGER = logging.getLogger(__package__)
 DEFAULT_LISTENING_PORT: Final = 10001
 CONF_ZONES: Final = "zones"
 SERVICE_GET_ZONES: Final = "get_zones"
+SERVICE_SET_ZONES: Final = "set_zones"
 
 DEVICE_MANUFACTURER: Final = "Pima"
 DEVICE_MODEL: Final = "Force"

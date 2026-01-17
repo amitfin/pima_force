@@ -46,6 +46,20 @@
                     "description": "Config entry ID to read zones from."
                 }
             }
+        },
+        "set_zones": {
+            "name": "Set zones",
+            "description": "Update the zone list.",
+            "fields": {
+                "config_entry_id": {
+                    "name": "Config entry ID",
+                    "description": "Config entry ID to update zones for."
+                },
+                "zones": {
+                    "name": "Zone names",
+                    "description": "Full ordered list of zone names to set (empty string for unused zones)."
+                }
+            }
         }
     }
 }

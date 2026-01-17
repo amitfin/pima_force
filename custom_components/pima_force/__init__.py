@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +12,12 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, Platform
 from homeassistant.core import ServiceResponse, SupportsResponse, callback
 from homeassistant.helpers import selector
 
-from custom_components.pima_force.const import CONF_ZONES, DOMAIN, SERVICE_GET_ZONES
+from custom_components.pima_force.const import (
+    CONF_ZONES,
+    DOMAIN,
+    SERVICE_GET_ZONES,
+    SERVICE_SET_ZONES,
+)
 
 from .coordinator import PimaForceDataUpdateCoordinator
 
@@ -26,6 +32,14 @@ SERVICE_GET_ZONES_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
             selector.ConfigEntrySelectorConfig(integration=DOMAIN)
         )
+    }
+)
+SERVICE_SET_ZONES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+            selector.ConfigEntrySelectorConfig(integration=DOMAIN)
+        ),
+        vol.Required(CONF_ZONES): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -57,12 +71,32 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
             }
         return None
 
+    @callback
+    async def async_set_zones(call: ServiceCall) -> None:
+        """Set zone list for a config entry."""
+        if config_entry := hass.config_entries.async_get_entry(
+            call.data[ATTR_CONFIG_ENTRY_ID]
+        ):
+            hass.config_entries.async_update_entry(
+                config_entry,
+                options={
+                    **config_entry.options,
+                    CONF_ZONES: [{CONF_NAME: zone} for zone in call.data[CONF_ZONES]],
+                },
+            )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_ZONES,
         async_get_zones,
         schema=SERVICE_GET_ZONES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_ZONES,
+        async_set_zones,
+        schema=SERVICE_SET_ZONES_SCHEMA,
     )
 
     return True

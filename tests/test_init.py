@@ -24,6 +24,7 @@ from custom_components.pima_force.const import (
     DEFAULT_LISTENING_PORT,
     DOMAIN,
     SERVICE_GET_ZONES,
+    SERVICE_SET_ZONES,
 )
 
 if TYPE_CHECKING:
@@ -68,6 +69,41 @@ async def test_async_setup_get_zones_action(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
+
+
+async def test_async_setup_set_zones_action(hass: HomeAssistant) -> None:
+    """Test set_zones service updates configured zone names."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: []},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup(hass, {})
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_ZONES,
+        {
+            ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
+            CONF_ZONES: ["Front Door", "Back Door"],
+        },
+        blocking=True,
+    )
+
+    assert config_entry.options[CONF_ZONES] == [
+        {CONF_NAME: "Front Door"},
+        {CONF_NAME: "Back Door"},
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_ZONES,
+        {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id, CONF_ZONES: ["", "Hall"]},
+        blocking=True,
+    )
+
+    assert config_entry.options[CONF_ZONES] == [{CONF_NAME: ""}, {CONF_NAME: "Hall"}]
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
