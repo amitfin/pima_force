@@ -50,7 +50,11 @@ class PimaForceConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=OPTIONS_SCHEMA)
 
-        return self.async_create_entry(title=TITLE, data={}, options=user_input)
+        return self.async_create_entry(
+            title=f"{TITLE} {user_input[CONF_PORT]}",
+            data={},
+            options=user_input,
+        )
 
     @staticmethod
     @callback
@@ -70,6 +74,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Handle an options flow."""
         if user_input is not None:
             return self.async_create_entry(
+                title=f"{TITLE} {user_input[CONF_PORT]}",
                 data={**self._config_entry.options, **user_input},
             )
 

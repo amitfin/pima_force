@@ -52,7 +52,7 @@ async def test_flow_user_creates_entry(hass: HomeAssistant) -> None:
         user_input={CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: _zones()},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == TITLE
+    assert result.get("title") == f"{TITLE} {DEFAULT_LISTENING_PORT}"
     assert result.get("data") == {}
     assert result.get("options") == {
         CONF_PORT: DEFAULT_LISTENING_PORT,
@@ -88,4 +88,5 @@ async def test_options_flow_updates_port(hass: HomeAssistant) -> None:
         user_input={CONF_PORT: 6000},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == f"{TITLE} 6000"
     assert result.get("data") == {CONF_PORT: 6000, CONF_ZONES: zones}
