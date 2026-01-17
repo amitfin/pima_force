@@ -13,6 +13,7 @@ from .const import (
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
     ATTR_LAST_TOGGLE,
+    ATTR_ZONE,
     CONF_ZONES,
     DOMAIN,
 )
@@ -69,6 +70,7 @@ class PimaForceZoneBinarySensor(
             ATTR_LAST_OPEN: None,
             ATTR_LAST_CLOSE: None,
             ATTR_LAST_TOGGLE: None,
+            ATTR_ZONE: zone,
         }
         self._zone = zone
 

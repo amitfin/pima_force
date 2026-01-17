@@ -21,6 +21,7 @@ from custom_components.pima_force.const import (
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
     ATTR_LAST_TOGGLE,
+    ATTR_ZONE,
     CONF_ZONES,
     DEFAULT_LISTENING_PORT,
     DOMAIN,
@@ -223,6 +224,7 @@ async def test_handle_update_sets_timestamps(
     await sensor.async_added_to_hass()
 
     tz = dt_util.get_time_zone("America/New_York")
+    assert tz is not None
     old_tz = dt_util.DEFAULT_TIME_ZONE
     dt_util.set_default_time_zone(tz)
     try:
@@ -234,6 +236,7 @@ async def test_handle_update_sets_timestamps(
             ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
             ATTR_LAST_CLOSE: None,
             ATTR_LAST_TOGGLE: "2024-01-01T00:00:00-05:00",
+            ATTR_ZONE: 6,
         }
 
         freezer.move_to(datetime(2024, 1, 1, 0, 10, 0, tzinfo=tz))
@@ -244,6 +247,7 @@ async def test_handle_update_sets_timestamps(
             ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
             ATTR_LAST_CLOSE: "2024-01-01T00:10:00-05:00",
             ATTR_LAST_TOGGLE: "2024-01-01T00:10:00-05:00",
+            ATTR_ZONE: 6,
         }
     finally:
         dt_util.set_default_time_zone(old_tz)
@@ -284,6 +288,7 @@ async def test_restores_timestamp_attributes(
         ATTR_LAST_OPEN: "2024-01-01T01:00:00+00:00",
         ATTR_LAST_CLOSE: "2023-12-31T23:00:00+00:00",
         ATTR_LAST_TOGGLE: "2024-01-01T01:00:00+00:00",
+        ATTR_ZONE: 7,
     }
 
 

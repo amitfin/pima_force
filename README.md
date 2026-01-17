@@ -81,7 +81,8 @@ The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For
 
 The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/).
 
-Each sensor exposes timestamp attributes (local time, ISO 8601):
+Each sensor exposes attributes (timestamps are local time, ISO 8601):
+- `zone`: zone number from the configured list.
 - `last_open`: last time the zone reported open.
 - `last_close`: last time the zone reported closed.
 - `last_toggle`: last time the zone state changed.
