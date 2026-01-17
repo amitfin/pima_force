@@ -73,8 +73,11 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle an options flow."""
         if user_input is not None:
+            if self._config_entry.options[CONF_PORT] != user_input[CONF_PORT]:
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry, title=f"{TITLE} {user_input[CONF_PORT]}"
+                )
             return self.async_create_entry(
-                title=f"{TITLE} {user_input[CONF_PORT]}",
                 data={**self._config_entry.options, **user_input},
             )
 

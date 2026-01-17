@@ -88,5 +88,5 @@ async def test_options_flow_updates_port(hass: HomeAssistant) -> None:
         user_input={CONF_PORT: 6000},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == f"{TITLE} 6000"
     assert result.get("data") == {CONF_PORT: 6000, CONF_ZONES: zones}
+    assert config_entry.title == f"{TITLE} 6000"
