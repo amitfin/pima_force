@@ -98,30 +98,30 @@ Here is an example of a markdown card which lists all zones sorted by their last
   content: |
     | Zone | Changed | Open | Closed |
     |--------|---------|------|--------|
-    {% set valid = states.binary_sensor | 
+    {% set valid = states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
-         rejectattr('attributes.last_toggle', 'eq', none) | 
+         rejectattr('attributes.last_toggle', 'eq', none) |
          rejectattr('attributes.last_open', 'eq', none) |
          rejectattr('attributes.last_close', 'eq', none) |
          map(attribute='entity_id') |
-         list 
-    -%} 
-    {% for sensor in states.binary_sensor | 
+         list
+    -%}
+    {% for sensor in states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
          selectattr('entity_id', 'in', valid) |
-         sort(attribute='attributes.last_toggle', reverse=True) 
-    -%} 
-    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | 
-    {{- as_timestamp(sensor.attributes.last_toggle) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
-    {{- as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
-    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} | 
-    {% endfor %} 
-    {%- for sensor in states.binary_sensor | 
+         sort(attribute='attributes.last_toggle', reverse=True)
+    -%}
+    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} |
+    {{- as_timestamp(sensor.attributes.last_toggle) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} |
+    {{- as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} |
+    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} |
+    {% endfor %}
+    {%- for sensor in states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
          rejectattr('entity_id', 'in', valid) |
          sort(attribute='attributes.friendly_name')
-    -%} 
-    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | - | - | - | 
+    -%}
+    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | - | - | - |
     {% endfor %}
 ```
 
@@ -145,19 +145,40 @@ actions:
       message: Safe is open!
 ```
 
-Another ideas can be: 
+Another ideas can be:
 - Turning on lights using motion sensors.
 - Use motion sensors for presence (or absence) detection.
 - Notify on door sensors, for example, when the backyard door (the pool area) is open.
 
 ## Services
 
-The integration exposes a service to fetch configured zone names:
+The integration exposes services to read and update the configured zone names.
+
+### `pima_force.get_zones`
+
+Returns the zone name list for a specific config entry. Empty items are preserved
+to keep zone numbering aligned with the alarm. The response payload contains
+`zones`, an ordered list of strings.
 
 ```yaml
 service: pima_force.get_zones
 data:
   config_entry_id: 1234567890abcdef1234567890abcdef
+```
+
+### `pima_force.set_zones`
+
+Replaces the zone name list for a specific config entry. Provide an ordered list
+of strings; use empty strings for unused zones.
+
+```yaml
+service: pima_force.set_zones
+data:
+  config_entry_id: 1234567890abcdef1234567890abcdef
+  zones:
+    - Front Door
+    - ""
+    - Back Door
 ```
 
 ## Uninstall
