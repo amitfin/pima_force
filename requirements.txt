@@ -1,4 +1,4 @@
 pytest-homeassistant-custom-component
-pysiaalarm
+git+https://github.com/eavanvalkenburg/pysiaalarm.git@master
 ruff
 mypy
