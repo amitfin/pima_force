@@ -153,6 +153,7 @@ Another ideas can be:
 ## Services
 
 The integration exposes services to read and update the configured zone names.
+It also provides testing-only actions that can simulate zone state changes in Home Assistant.
 
 ### `pima_force.get_zones`
 
@@ -179,6 +180,28 @@ data:
     - Front Door
     - ""
     - Back Door
+```
+
+### `pima_force.set_open` (testing only)
+
+Marks a zone as open in Home Assistant without sending anything to the alarm system.
+Use this only for testing automations and dashboards.
+
+```yaml
+service: pima_force.set_open
+target:
+  entity_id: binary_sensor.pima_force_10001_zone5
+```
+
+### `pima_force.set_closed` (testing only)
+
+Marks a zone as closed in Home Assistant without sending anything to the alarm system.
+Use this only for testing automations and dashboards.
+
+```yaml
+service: pima_force.set_closed
+target:
+  entity_id: binary_sensor.pima_force_10001_zone5
 ```
 
 ## Uninstall

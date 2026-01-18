@@ -1,6 +1,8 @@
 {
   "services": {
     "get_zones": "mdi:format-list-bulleted",
-    "set_zones": "mdi:playlist-edit"
+    "set_zones": "mdi:playlist-edit",
+    "set_open": "mdi:door-open",
+    "set_closed": "mdi:door-closed"
   }
 }

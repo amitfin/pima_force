@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.components import binary_sensor
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_ON
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -16,6 +19,8 @@ from .const import (
     ATTR_ZONE,
     CONF_ZONES,
     DOMAIN,
+    SERVICE_SET_CLOSED,
+    SERVICE_SET_OPEN,
 )
 from .entity import PimaForceEntity
 
@@ -26,6 +31,8 @@ if TYPE_CHECKING:
     from custom_components.pima_force import PimaForceConfigEntry
 
 PARALLEL_UPDATES = 0
+
+SERVICE_SCHEMA = cv.make_entity_service_schema(None, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(
@@ -42,6 +49,13 @@ async def async_setup_entry(
         )
         for index, zone in enumerate(config_entry.options.get(CONF_ZONES, []))
         if zone.get(CONF_NAME)
+    )
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_OPEN, SERVICE_SCHEMA, "async_set_open"
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_CLOSED, SERVICE_SCHEMA, "async_set_closed"
     )
 
 
@@ -96,3 +110,13 @@ class PimaForceZoneBinarySensor(
                 self._attr_extra_state_attributes[ATTR_LAST_CLOSE] = now
             self._attr_is_on = new_state
             super()._handle_coordinator_update()
+
+    async def async_set_open(self) -> None:
+        """Set the zone state to open."""
+        self.coordinator.zones[self._zone] = True
+        self._handle_coordinator_update()
+
+    async def async_set_closed(self) -> None:
+        """Set the zone state to closed."""
+        self.coordinator.zones[self._zone] = False
+        self._handle_coordinator_update()

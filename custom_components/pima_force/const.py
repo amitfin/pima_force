@@ -11,6 +11,8 @@ DEFAULT_LISTENING_PORT: Final = 10001
 CONF_ZONES: Final = "zones"
 SERVICE_GET_ZONES: Final = "get_zones"
 SERVICE_SET_ZONES: Final = "set_zones"
+SERVICE_SET_OPEN: Final = "set_open"
+SERVICE_SET_CLOSED: Final = "set_closed"
 
 DEVICE_MANUFACTURER: Final = "Pima"
 DEVICE_MODEL: Final = "Force"

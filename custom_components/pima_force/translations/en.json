@@ -60,6 +60,14 @@
                     "description": "Full ordered list of zone names to set (empty string for unused zones)."
                 }
             }
+        },
+        "set_open": {
+            "name": "Set open",
+            "description": "Mark a zone as open for testing purposes."
+        },
+        "set_closed": {
+            "name": "Set closed",
+            "description": "Mark a zone as closed for testing purposes."
         }
     }
 }

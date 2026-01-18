@@ -9,14 +9,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force import PimaForceRuntimeData
-from custom_components.pima_force.binary_sensor import (
-    PimaForceZoneBinarySensor,
-    async_setup_entry,
-)
+from custom_components.pima_force.binary_sensor import PimaForceZoneBinarySensor
 from custom_components.pima_force.const import (
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
@@ -25,12 +23,39 @@ from custom_components.pima_force.const import (
     CONF_ZONES,
     DEFAULT_LISTENING_PORT,
     DOMAIN,
+    SERVICE_SET_CLOSED,
+    SERVICE_SET_OPEN,
 )
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory
     from homeassistant.core import HomeAssistant
+
+
+async def _setup_entities(
+    hass: HomeAssistant, entry_id: str, zones: list[dict[str, str]]
+) -> list[er.RegistryEntry]:
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=entry_id,
+        options={CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: zones},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    return [
+        entry
+        for entry in registry.entities.values()
+        if entry.config_entry_id == entry_id
+    ]
+
+
+def _sorted_entities(entries: list[er.RegistryEntry]) -> list[er.RegistryEntry]:
+    return sorted(entries, key=lambda entry: int(entry.unique_id.split("_")[-1]))
 
 
 def _stored_state(entity_id: str, state: str) -> State:
@@ -45,30 +70,31 @@ def _stored_state_with_attrs(
 
 async def test_async_setup_entry_adds_named_zones(hass: HomeAssistant) -> None:
     """Test entities are created only for zones with names."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_PORT: DEFAULT_LISTENING_PORT,
-            CONF_ZONES: [
+    entry_id = "test_entry"
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
                 {CONF_NAME: ""},
                 {CONF_NAME: "Front Door"},
                 {CONF_NAME: "Back Door"},
             ],
-        },
+        )
     )
-    config_entry.runtime_data = PimaForceRuntimeData(
-        PimaForceDataUpdateCoordinator(hass, config_entry)
-    )
-    async_add_entities = MagicMock()
 
-    await async_setup_entry(hass, config_entry, async_add_entities)
-
-    entities = list(async_add_entities.call_args.args[0])
-    assert len(entities) == 2
-    assert entities[0].name == "Front Door"
-    assert entities[0].unique_id == f"{config_entry.entry_id}_2"
-    assert entities[1].name == "Back Door"
-    assert entities[1].unique_id == f"{config_entry.entry_id}_3"
+    assert [entry.entity_id for entry in entities] == [
+        f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone2",
+        f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone3",
+    ]
+    assert [entry.unique_id for entry in entities] == [
+        f"{entry_id}_2",
+        f"{entry_id}_3",
+    ]
+    assert [entry.original_name for entry in entities] == [
+        "Front Door",
+        "Back Door",
+    ]
 
 
 async def test_is_on_prefers_live_zone_state(
@@ -301,109 +327,153 @@ async def test_async_setup_entry_handles_zone_option_changes(
 ) -> None:
     """Test zone additions, removals, renames, and reorders."""
     entry_id = "test_entry"
-
-    async def _setup_entities(
-        zones: list[dict[str, str]],
-    ) -> list[PimaForceZoneBinarySensor]:
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            entry_id=entry_id,
-            options={CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: zones},
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
+                {CONF_NAME: "Front Door"},
+                {CONF_NAME: "Back Door"},
+                {CONF_NAME: "Garage"},
+            ],
         )
-        config_entry.runtime_data = PimaForceRuntimeData(
-            PimaForceDataUpdateCoordinator(hass, config_entry)
-        )
-        async_add_entities = MagicMock()
-
-        await async_setup_entry(hass, config_entry, async_add_entities)
-        return list(async_add_entities.call_args.args[0])
-
-    entities = await _setup_entities(
-        [
-            {CONF_NAME: "Front Door"},
-            {CONF_NAME: "Back Door"},
-            {CONF_NAME: "Garage"},
-        ]
     )
-    assert [entity.name for entity in entities] == [
+    assert [entry.original_name for entry in entities] == [
         "Front Door",
         "Back Door",
         "Garage",
     ]
-    assert [entity.unique_id for entity in entities] == _zone_unique_ids(
+    assert [entry.unique_id for entry in entities] == _zone_unique_ids(
         entry_id, [1, 2, 3]
     )
 
-    entities = await _setup_entities(
-        [
-            {CONF_NAME: "Front Door"},
-            {CONF_NAME: "Back Door"},
-            {CONF_NAME: "Garage"},
-            {CONF_NAME: "Office"},
-            {CONF_NAME: "Patio"},
-        ]
+    entry_id = "test_entry_2"
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
+                {CONF_NAME: "Front Door"},
+                {CONF_NAME: "Back Door"},
+                {CONF_NAME: "Garage"},
+                {CONF_NAME: "Office"},
+                {CONF_NAME: "Patio"},
+            ],
+        )
     )
-    assert [entity.name for entity in entities] == [
+    assert [entry.original_name for entry in entities] == [
         "Front Door",
         "Back Door",
         "Garage",
         "Office",
         "Patio",
     ]
-    assert [entity.unique_id for entity in entities] == _zone_unique_ids(
+    assert [entry.unique_id for entry in entities] == _zone_unique_ids(
         entry_id, [1, 2, 3, 4, 5]
     )
 
-    entities = await _setup_entities(
-        [
-            {CONF_NAME: "Front Door"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Garage"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Patio"},
-        ]
+    entry_id = "test_entry_3"
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
+                {CONF_NAME: "Front Door"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Garage"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Patio"},
+            ],
+        )
     )
-    assert [entity.name for entity in entities] == [
+    assert [entry.original_name for entry in entities] == [
         "Front Door",
         "Garage",
         "Patio",
     ]
-    assert [entity.unique_id for entity in entities] == _zone_unique_ids(
+    assert [entry.unique_id for entry in entities] == _zone_unique_ids(
         entry_id, [1, 3, 5]
     )
 
-    entities = await _setup_entities(
-        [
-            {CONF_NAME: "Front Entry"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Garage Bay"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Patio Door"},
-        ]
+    entry_id = "test_entry_4"
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
+                {CONF_NAME: "Front Entry"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Garage Bay"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Patio Door"},
+            ],
+        )
     )
-    assert [entity.name for entity in entities] == [
+    assert [entry.original_name for entry in entities] == [
         "Front Entry",
         "Garage Bay",
         "Patio Door",
     ]
-    assert [entity.unique_id for entity in entities] == _zone_unique_ids(
+    assert [entry.unique_id for entry in entities] == _zone_unique_ids(
         entry_id, [1, 3, 5]
     )
 
-    entities = await _setup_entities(
-        [
-            {CONF_NAME: "Patio Door"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Front Entry"},
-            {CONF_NAME: ""},
-            {CONF_NAME: "Garage Bay"},
-        ]
+    entry_id = "test_entry_5"
+    entities = _sorted_entities(
+        await _setup_entities(
+            hass,
+            entry_id,
+            [
+                {CONF_NAME: "Patio Door"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Front Entry"},
+                {CONF_NAME: ""},
+                {CONF_NAME: "Garage Bay"},
+            ],
+        )
     )
-    assert [entity.name for entity in entities] == [
+    assert [entry.original_name for entry in entities] == [
         "Patio Door",
         "Front Entry",
         "Garage Bay",
     ]
-    assert [entity.unique_id for entity in entities] == _zone_unique_ids(
+    assert [entry.unique_id for entry in entities] == _zone_unique_ids(
         entry_id, [1, 3, 5]
     )
+
+
+async def test_entity_services_update_zone_state(hass: HomeAssistant) -> None:
+    """Test entity services update zone states."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_PORT: DEFAULT_LISTENING_PORT,
+            CONF_ZONES: [{CONF_NAME: "Front Door"}],
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPEN,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CLOSED,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF

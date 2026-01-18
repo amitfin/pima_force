@@ -19,4 +19,13 @@ set_zones:
       example: ["Front Door", "", "Back Door"]
       selector:
         object:
-
+set_open:
+  target:
+    entity:
+      integration: pima_force
+      domain: binary_sensor
+set_closed:
+  target:
+    entity:
+      integration: pima_force
+      domain: binary_sensor
