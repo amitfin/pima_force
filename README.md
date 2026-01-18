@@ -98,7 +98,7 @@ Here is an example of a markdown card which lists all zones sorted by their last
   type: markdown
   content: |
     | Zone | Set | Open | Closed |
-    |--------|---------|------|--------|
+    |------|-----|------|--------|
     {% for sensor in states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
          sort(attribute='attributes.friendly_name') |
