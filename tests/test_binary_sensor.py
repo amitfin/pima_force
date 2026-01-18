@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory
     from homeassistant.core import HomeAssistant
 
+NOW = "2024-01-01T00:00:00+00:00"
+
 
 async def _setup_entities(
     hass: HomeAssistant, entry_id: str, zones: list[dict[str, str]]
@@ -108,7 +110,7 @@ async def test_is_on_prefers_live_zone_state(
     coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
     config_entry.runtime_data = PimaForceRuntimeData(coordinator)
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 1, "Front Door")
+    sensor = PimaForceZoneBinarySensor(config_entry, 1, "Front Door", NOW)
     sensor.hass = hass
     coordinator.zones[1] = False
     monkeypatch.setattr(
@@ -144,7 +146,7 @@ async def test_is_on_uses_restored_state(
         PimaForceDataUpdateCoordinator(hass, config_entry)
     )
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 2, "Back Door")
+    sensor = PimaForceZoneBinarySensor(config_entry, 2, "Back Door", NOW)
     monkeypatch.setattr(
         sensor,
         "async_get_last_state",
@@ -170,7 +172,7 @@ async def test_is_on_defaults_off(
         PimaForceDataUpdateCoordinator(hass, config_entry)
     )
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 3, "Garage")
+    sensor = PimaForceZoneBinarySensor(config_entry, 3, "Garage", NOW)
     monkeypatch.setattr(sensor, "async_get_last_state", AsyncMock(return_value=None))
 
     await sensor.async_added_to_hass()
@@ -189,7 +191,7 @@ async def test_handle_update_skips_missing_zone(
     coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
     config_entry.runtime_data = PimaForceRuntimeData(coordinator)
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 4, "Office")
+    sensor = PimaForceZoneBinarySensor(config_entry, 4, "Office", NOW)
     sensor.hass = hass
     monkeypatch.setattr(sensor, "async_get_last_state", AsyncMock(return_value=None))
     write_state = MagicMock()
@@ -212,7 +214,7 @@ async def test_handle_update_skips_unchanged_state(
     coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
     config_entry.runtime_data = PimaForceRuntimeData(coordinator)
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 5, "Kitchen")
+    sensor = PimaForceZoneBinarySensor(config_entry, 5, "Kitchen", NOW)
     sensor.hass = hass
     coordinator.zones[5] = True
     monkeypatch.setattr(
@@ -252,7 +254,7 @@ async def test_handle_update_sets_timestamps(
     coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
     config_entry.runtime_data = PimaForceRuntimeData(coordinator)
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 6, "Basement")
+    sensor = PimaForceZoneBinarySensor(config_entry, 6, "Basement", NOW)
     sensor.hass = hass
     monkeypatch.setattr(sensor, "async_get_last_state", AsyncMock(return_value=None))
     monkeypatch.setattr(sensor, "async_write_ha_state", MagicMock())
@@ -261,6 +263,7 @@ async def test_handle_update_sets_timestamps(
 
     tz = dt_util.get_time_zone("America/New_York")
     assert tz is not None
+    assert sensor.extra_state_attributes is not None
     initial_last_close = sensor.extra_state_attributes[ATTR_LAST_CLOSE]
     old_tz = dt_util.DEFAULT_TIME_ZONE
     dt_util.set_default_time_zone(tz)
@@ -302,7 +305,7 @@ async def test_restores_timestamp_attributes(
         PimaForceDataUpdateCoordinator(hass, config_entry)
     )
 
-    sensor = PimaForceZoneBinarySensor(config_entry, 7, "Side Door")
+    sensor = PimaForceZoneBinarySensor(config_entry, 7, "Side Door", NOW)
     monkeypatch.setattr(
         sensor,
         "async_get_last_state",

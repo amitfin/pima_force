@@ -41,11 +41,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    now = dt_util.now().isoformat()
     async_add_entities(
         PimaForceZoneBinarySensor(
             config_entry,
             index + 1,
             zone[CONF_NAME],
+            now,
         )
         for index, zone in enumerate(config_entry.options.get(CONF_ZONES, []))
         if zone.get(CONF_NAME)
@@ -68,7 +70,7 @@ class PimaForceZoneBinarySensor(
     _unrecorded_attributes = frozenset({ATTR_LAST_OPEN, ATTR_LAST_CLOSE, ATTR_LAST_SET})
 
     def __init__(
-        self, config_entry: PimaForceConfigEntry, zone: int, name: str
+        self, config_entry: PimaForceConfigEntry, zone: int, name: str, now: str
     ) -> None:
         """Initialize object with defaults."""
         super().__init__(config_entry)
@@ -78,7 +80,6 @@ class PimaForceZoneBinarySensor(
         )
         self._attr_name = name
         self._attr_is_on = False
-        now = dt_util.now().isoformat()
         self._attr_extra_state_attributes = {
             ATTR_LAST_SET: now,
             ATTR_LAST_OPEN: None,

@@ -101,6 +101,7 @@ Here is an example of a markdown card which lists all zones sorted by their last
     |--------|---------|------|--------|
     {% for sensor in states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
+         sort(attribute='attributes.friendly_name') |
          sort(attribute='attributes.last_set', reverse=True)
     -%}
     | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} |
