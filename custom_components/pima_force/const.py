@@ -19,7 +19,7 @@ DEVICE_MODEL: Final = "Force"
 
 ATTR_LAST_OPEN: Final = "last_open"
 ATTR_LAST_CLOSE: Final = "last_close"
-ATTR_LAST_TOGGLE: Final = "last_toggle"
+ATTR_LAST_SET: Final = "last_set"
 ATTR_ZONE: Final = "zone"
 
 SIA_PIMA_KEEP_CONNECTED_QUALIFIER: Final = "KC"

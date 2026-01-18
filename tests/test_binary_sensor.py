@@ -18,7 +18,7 @@ from custom_components.pima_force.binary_sensor import PimaForceZoneBinarySensor
 from custom_components.pima_force.const import (
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
-    ATTR_LAST_TOGGLE,
+    ATTR_LAST_SET,
     ATTR_ZONE,
     CONF_ZONES,
     DEFAULT_LISTENING_PORT,
@@ -225,7 +225,7 @@ async def test_handle_update_skips_unchanged_state(
                 {
                     ATTR_LAST_OPEN: "2024-01-01T00:00:00+00:00",
                     ATTR_LAST_CLOSE: None,
-                    ATTR_LAST_TOGGLE: "2024-01-01T00:00:00+00:00",
+                    ATTR_LAST_SET: "2024-01-01T00:00:00+00:00",
                 },
             )
         ),
@@ -237,51 +237,6 @@ async def test_handle_update_skips_unchanged_state(
     coordinator.async_update_listeners()
 
     write_state.assert_not_called()
-
-
-async def test_handle_update_sets_timestamps_when_last_toggle_missing(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test timestamps are updated when last toggle is missing."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={CONF_PORT: DEFAULT_LISTENING_PORT},
-    )
-    coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
-    config_entry.runtime_data = PimaForceRuntimeData(coordinator)
-
-    sensor = PimaForceZoneBinarySensor(config_entry, 5, "Kitchen")
-    sensor.hass = hass
-    coordinator.zones[5] = True
-    monkeypatch.setattr(
-        sensor,
-        "async_get_last_state",
-        AsyncMock(
-            return_value=_stored_state_with_attrs("binary_sensor.kitchen", STATE_ON, {})
-        ),
-    )
-    write_state = MagicMock()
-    monkeypatch.setattr(sensor, "async_write_ha_state", write_state)
-
-    await sensor.async_added_to_hass()
-
-    old_tz = dt_util.DEFAULT_TIME_ZONE
-    dt_util.set_default_time_zone(dt_util.UTC)
-    try:
-        freezer.move_to(datetime(2024, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC))
-        coordinator.async_update_listeners()
-    finally:
-        dt_util.set_default_time_zone(old_tz)
-
-    write_state.assert_called_once()
-    assert sensor.extra_state_attributes == {
-        ATTR_LAST_OPEN: "2024-01-01T00:00:00+00:00",
-        ATTR_LAST_CLOSE: None,
-        ATTR_LAST_TOGGLE: "2024-01-01T00:00:00+00:00",
-        ATTR_ZONE: 5,
-    }
 
 
 async def test_handle_update_sets_timestamps(
@@ -306,6 +261,7 @@ async def test_handle_update_sets_timestamps(
 
     tz = dt_util.get_time_zone("America/New_York")
     assert tz is not None
+    initial_last_close = sensor.extra_state_attributes[ATTR_LAST_CLOSE]
     old_tz = dt_util.DEFAULT_TIME_ZONE
     dt_util.set_default_time_zone(tz)
     try:
@@ -315,8 +271,8 @@ async def test_handle_update_sets_timestamps(
 
         assert sensor.extra_state_attributes == {
             ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
-            ATTR_LAST_CLOSE: None,
-            ATTR_LAST_TOGGLE: "2024-01-01T00:00:00-05:00",
+            ATTR_LAST_CLOSE: initial_last_close,
+            ATTR_LAST_SET: "2024-01-01T00:00:00-05:00",
             ATTR_ZONE: 6,
         }
 
@@ -327,7 +283,7 @@ async def test_handle_update_sets_timestamps(
         assert sensor.extra_state_attributes == {
             ATTR_LAST_OPEN: "2024-01-01T00:00:00-05:00",
             ATTR_LAST_CLOSE: "2024-01-01T00:10:00-05:00",
-            ATTR_LAST_TOGGLE: "2024-01-01T00:10:00-05:00",
+            ATTR_LAST_SET: "2024-01-01T00:10:00-05:00",
             ATTR_ZONE: 6,
         }
     finally:
@@ -357,7 +313,7 @@ async def test_restores_timestamp_attributes(
                 {
                     ATTR_LAST_OPEN: "2024-01-01T01:00:00+00:00",
                     ATTR_LAST_CLOSE: "2023-12-31T23:00:00+00:00",
-                    ATTR_LAST_TOGGLE: "2024-01-01T01:00:00+00:00",
+                    ATTR_LAST_SET: "2024-01-01T01:00:00+00:00",
                 },
             )
         ),
@@ -368,7 +324,7 @@ async def test_restores_timestamp_attributes(
     assert sensor.extra_state_attributes == {
         ATTR_LAST_OPEN: "2024-01-01T01:00:00+00:00",
         ATTR_LAST_CLOSE: "2023-12-31T23:00:00+00:00",
-        ATTR_LAST_TOGGLE: "2024-01-01T01:00:00+00:00",
+        ATTR_LAST_SET: "2024-01-01T01:00:00+00:00",
         ATTR_ZONE: 7,
     }
 

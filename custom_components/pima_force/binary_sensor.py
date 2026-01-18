@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
-    ATTR_LAST_TOGGLE,
+    ATTR_LAST_SET,
     ATTR_ZONE,
     CONF_ZONES,
     DOMAIN,
@@ -65,9 +65,7 @@ class PimaForceZoneBinarySensor(
     """Representation of the alert sensor base."""
 
     _attr_device_class = binary_sensor.BinarySensorDeviceClass.DOOR
-    _unrecorded_attributes = frozenset(
-        {ATTR_LAST_OPEN, ATTR_LAST_CLOSE, ATTR_LAST_TOGGLE}
-    )
+    _unrecorded_attributes = frozenset({ATTR_LAST_OPEN, ATTR_LAST_CLOSE, ATTR_LAST_SET})
 
     def __init__(
         self, config_entry: PimaForceConfigEntry, zone: int, name: str
@@ -80,10 +78,11 @@ class PimaForceZoneBinarySensor(
         )
         self._attr_name = name
         self._attr_is_on = False
+        now = dt_util.now().isoformat()
         self._attr_extra_state_attributes = {
+            ATTR_LAST_SET: now,
             ATTR_LAST_OPEN: None,
-            ATTR_LAST_CLOSE: None,
-            ATTR_LAST_TOGGLE: None,
+            ATTR_LAST_CLOSE: now,
             ATTR_ZONE: zone,
         }
         self._zone = zone
@@ -99,12 +98,11 @@ class PimaForceZoneBinarySensor(
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (new_state := self.coordinator.zones.get(self._zone)) is not None and (
-            new_state != self._attr_is_on
-            or self._attr_extra_state_attributes[ATTR_LAST_TOGGLE] is None
-        ):
+        if (
+            new_state := self.coordinator.zones.get(self._zone)
+        ) is not None and new_state != self._attr_is_on:
             now = dt_util.now().isoformat()
-            self._attr_extra_state_attributes[ATTR_LAST_TOGGLE] = now
+            self._attr_extra_state_attributes[ATTR_LAST_SET] = now
             if new_state:
                 self._attr_extra_state_attributes[ATTR_LAST_OPEN] = now
             else:

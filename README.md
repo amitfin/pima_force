@@ -83,9 +83,9 @@ The default device class is `Door`, but it can be changed by [customizing the en
 
 Each sensor exposes attributes (timestamps are local time, ISO 8601):
 - `zone`: zone number from the configured list.
+- `last_set`: last time the zone state was set (including test services).
 - `last_open`: last time the zone reported open.
 - `last_close`: last time the zone reported closed.
-- `last_toggle`: last time the zone state changed.
 
 The state is restored after Home Assistant restarts, but events that occur during downtime can be missed. For example, if a door opens while Home Assistant is rebooting, the sensor will still show "closed" (`off`) until the next change. Because the alarm only sends events on changes (not periodically), any mismatch is corrected the next time that zone reports a change.
 
@@ -94,32 +94,19 @@ The state is restored after Home Assistant restarts, but events that occur durin
 Here is an example of a markdown card which lists all zones sorted by their last status change:
 
 ```yaml
-- type: markdown
+- title: Zone Status History
+  type: markdown
   content: |
-    | Zone | Changed | Open | Closed |
+    | Zone | Set | Open | Closed |
     |--------|---------|------|--------|
-    {% set valid = states.binary_sensor |
-         selectattr('entity_id', 'in', integration_entities('pima_force')) |
-         rejectattr('attributes.last_toggle', 'eq', none) |
-         map(attribute='entity_id') |
-         list
-    -%}
     {% for sensor in states.binary_sensor |
          selectattr('entity_id', 'in', integration_entities('pima_force')) |
-         selectattr('entity_id', 'in', valid) |
-         sort(attribute='attributes.last_toggle', reverse=True)
+         sort(attribute='attributes.last_set', reverse=True)
     -%}
     | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} |
-    {{- as_timestamp(sensor.attributes.last_toggle) | timestamp_custom('%H:%M:%S (%-d/%-m)', true) }} |
-    {{- (as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%-d/%-m)', true)) if sensor.attributes.last_open else '' }} |
-    {{- (as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%-d/%-m)', true)) if sensor.attributes.last_close else '' }} |
-    {% endfor %}
-    {%- for sensor in states.binary_sensor |
-         selectattr('entity_id', 'in', integration_entities('pima_force')) |
-         rejectattr('entity_id', 'in', valid) |
-         sort(attribute='attributes.friendly_name')
-    -%}
-    | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} | - | - | - |
+    {{- as_timestamp(sensor.attributes.last_set) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true) }} |
+    {{- (as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true)) if sensor.attributes.last_open else '' }} |
+    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true) }} |
     {% endfor %}
 ```
 
@@ -183,7 +170,7 @@ data:
 ### `pima_force.set_open` (testing only)
 
 Marks a zone as open in Home Assistant without sending anything to the alarm system.
-Use this only for testing automations and dashboards.
+Use this only for testing automations and dashboards. The zone stays open until the alarm explicitly reports otherwise or `pima_force.set_closed` action is performed.
 
 ```yaml
 service: pima_force.set_open
@@ -194,7 +181,7 @@ target:
 ### `pima_force.set_closed` (testing only)
 
 Marks a zone as closed in Home Assistant without sending anything to the alarm system.
-Use this only for testing automations and dashboards.
+Use this only for testing automations and dashboards. The zone stays closed until the alarm explicitly reports otherwise or `pima_force.set_open` action is performed.
 
 ```yaml
 service: pima_force.set_closed
