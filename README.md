@@ -105,9 +105,9 @@ Here is an example of a markdown card which lists all zones sorted by their last
          sort(attribute='attributes.last_set', reverse=True)
     -%}
     | {{ sensor.attributes.friendly_name.split()[2:] | join(' ') }} |
-    {{- as_timestamp(sensor.attributes.last_set) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true) }} |
-    {{- (as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true)) if sensor.attributes.last_open else '' }} |
-    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S (%d/%m/%y)', true) }} |
+    {{- as_timestamp(sensor.attributes.last_set) | timestamp_custom('%H:%M:%S %d/%m/%y', true) }} |
+    {{- (as_timestamp(sensor.attributes.last_open) | timestamp_custom('%H:%M:%S %d/%m/%y', true)) if sensor.attributes.last_open else '' }} |
+    {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S %d/%m/%y', true) }} |
     {% endfor %}
 ```
 
