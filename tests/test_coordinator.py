@@ -29,7 +29,8 @@ async def test_process_event_updates_zone(hass: HomeAssistant) -> None:
             options={CONF_PORT: DEFAULT_LISTENING_PORT},
         ),
     )
-    coordinator.async_update_listeners = MagicMock()
+    mock_update_listeners = MagicMock()
+    coordinator.async_update_listeners = mock_update_listeners
 
     await coordinator.process_event(
         SIAEvent(
@@ -39,9 +40,9 @@ async def test_process_event_updates_zone(hass: HomeAssistant) -> None:
         )
     )
     assert coordinator.zones == {2: True}
-    coordinator.async_update_listeners.assert_called_once()
+    mock_update_listeners.assert_called_once()
 
-    coordinator.async_update_listeners.reset_mock()
+    mock_update_listeners.reset_mock()
     await coordinator.process_event(
         SIAEvent(
             event_type=ADM_CID_PIMA_ZONE_STATUS_CODE,
@@ -50,7 +51,7 @@ async def test_process_event_updates_zone(hass: HomeAssistant) -> None:
         )
     )
     assert coordinator.zones == {2: False}
-    coordinator.async_update_listeners.assert_called_once()
+    mock_update_listeners.assert_called_once()
 
 
 async def test_process_event_ignores_non_zone_event(hass: HomeAssistant) -> None:

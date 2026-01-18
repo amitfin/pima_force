@@ -466,7 +466,9 @@ async def test_entity_services_update_zone_state(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -476,4 +478,6 @@ async def test_entity_services_update_zone_state(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
