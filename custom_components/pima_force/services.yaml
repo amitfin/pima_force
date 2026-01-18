@@ -16,10 +16,7 @@ set_zones:
           integration: pima_force
     zones:
       required: true
-      example:
-        - Front Door
-        - ""
-        - Back Door
+      example: ["Front Door", "", "Back Door"]
       selector:
         object:
 
