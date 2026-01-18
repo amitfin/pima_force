@@ -99,9 +99,10 @@ class PimaForceZoneBinarySensor(
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            new_state := self.coordinator.zones.get(self._zone)
-        ) is not None and new_state != self._attr_is_on:
+        if (new_state := self.coordinator.zones.get(self._zone)) is not None and (
+            new_state != self._attr_is_on
+            or self._attr_extra_state_attributes[ATTR_LAST_TOGGLE] is None
+        ):
             now = dt_util.now().isoformat()
             self._attr_extra_state_attributes[ATTR_LAST_TOGGLE] = now
             if new_state:
