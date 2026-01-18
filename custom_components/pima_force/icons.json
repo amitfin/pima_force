@@ -1,10 +1,6 @@
 {
   "services": {
-    "get_zones": {
-      "icon": "mdi:format-list-bulleted"
-    },
-    "set_zones": {
-      "icon": "mdi:playlist-edit"
-    }
+    "get_zones": "mdi:format-list-bulleted",
+    "set_zones": "mdi:playlist-edit"
   }
 }
