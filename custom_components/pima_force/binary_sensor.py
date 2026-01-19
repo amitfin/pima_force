@@ -67,7 +67,9 @@ class PimaForceZoneBinarySensor(
     """Representation of the alert sensor base."""
 
     _attr_device_class = binary_sensor.BinarySensorDeviceClass.DOOR
-    _unrecorded_attributes = frozenset({ATTR_LAST_OPEN, ATTR_LAST_CLOSE, ATTR_LAST_SET})
+    _unrecorded_attributes = frozenset(
+        {ATTR_ZONE, ATTR_LAST_SET, ATTR_LAST_OPEN, ATTR_LAST_CLOSE}
+    )
 
     def __init__(
         self, config_entry: PimaForceConfigEntry, zone: int, name: str, now: str
@@ -81,10 +83,10 @@ class PimaForceZoneBinarySensor(
         self._attr_name = name
         self._attr_is_on = False
         self._attr_extra_state_attributes = {
+            ATTR_ZONE: zone,
             ATTR_LAST_SET: now,
             ATTR_LAST_OPEN: None,
             ATTR_LAST_CLOSE: now,
-            ATTR_ZONE: zone,
         }
         self._zone = zone
 
