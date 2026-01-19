@@ -110,8 +110,7 @@ Here is an example of a markdown card which lists all zones sorted by their last
     {{- as_timestamp(sensor.attributes.last_close) | timestamp_custom('%H:%M:%S %d/%m/%y', true) }} |
     {% endfor %}
 ```
-
-| <img width="477" height="316" alt="image" src="https://github.com/user-attachments/assets/41395634-9b5a-47e2-abfd-8552c646a1aa" /> |
+| <img width="474" height="258" alt="image" src="https://github.com/user-attachments/assets/00b7bdca-cdbc-4958-931d-024df21e78ac" /> |
 | --- |
 
 ## Automation
