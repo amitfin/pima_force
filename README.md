@@ -157,7 +157,7 @@ actions:
                 first |
                 attr('entity_id')
               }}
-            last_set: "{{ (state_attr(entity_id, 'last_set') | as_timestamp) }}"
+            last_set: "{{ state_attr(entity_id, 'last_set') | as_timestamp }}"
             zone: "{{ state_attr(entity_id, 'friendly_name').split()[2:] | join(' ') }}"
   - action: notify.mobile_app
     data:
