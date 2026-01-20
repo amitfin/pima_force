@@ -130,7 +130,42 @@ actions:
       message: Safe is open!
 ```
 
-Another ideas can be:
+Here is a more sophisticated example, which combines also the alarm panel entity (not created by this integration):
+
+```yaml
+alias: Alarm is triggered
+triggers:
+  - trigger: state
+    entity_id: alarm_control_panel.home_alarm_panel
+    to: triggered
+actions:
+  - variables:
+      start: "{{ now() | as_timestamp }}"
+  - repeat:
+      until:
+        - condition: template
+          value_template: "{{ last_set > start }}"
+      sequence:
+        - delay:
+            milliseconds: 500
+        - variables:
+            entity_id: |-
+              {{ 
+                states.binary_sensor |
+                selectattr('entity_id', 'in', integration_entities('pima_force')) |
+                sort(attribute='attributes.last_set', reverse=True) |
+                first |
+                attr('entity_id')
+              }}
+            last_set: "{{ (state_attr(entity_id, 'last_set') | as_timestamp) }}"
+            zone: "{{ state_attr(entity_id, 'friendly_name').split()[2:] | join(' ') }}"
+  - action: notify.mobile_app
+    data:
+      title: 🚨🚨 Alarm System 🚨🚨
+      message: "The alarm was triggered by the zone: {{ zone }}"
+```
+
+Additional automation ideas can be:
 - Turning on lights using motion sensors.
 - Use motion sensors for presence (or absence) detection.
 - Notify on door sensors, for example, when the backyard door (the pool area) is open.
