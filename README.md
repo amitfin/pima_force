@@ -140,7 +140,7 @@ triggers:
     to: triggered
 actions:
   - variables:
-      start: "{{ now() | as_timestamp }}"
+      start: "{{ now() | as_timestamp - 2 }}"
   - repeat:
       until:
         - condition: template
