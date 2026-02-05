@@ -10,7 +10,7 @@
 
 ***This integration is not affiliated with Pima.***
 
-The integration creates `binary_sensor` entities for [Pima Force](https://www.pima-alarms.com/our-products/force-security-system/) alarm system zones. The sensors turn `on` when the zone is "open" (i.e., it causes the alarm to trigger when it is armed). This is a read-only integration and does not have the ability to control or change the alarm system. It reads [SIA events](https://www.securityindustry.org/industry-standards/dc-09-2021/) with [ADM-CID payload](https://www.securityindustry.org/industry-standards/dc-05-2016/) sent from the alarm. The integration does not require additional hardware.
+The integration creates `binary_sensor` entities for [Pima Force](https://www.pima-alarms.com/our-products/force-security-system/) alarm system zones. The sensors turn `on` when the zone is "open" (i.e., triggers the alarm when it's armed). This is a read-only integration and does not have the ability to control or change the alarm system. It reads [SIA events](https://www.securityindustry.org/industry-standards/dc-09-2021/) with [ADM-CID payload](https://www.securityindustry.org/industry-standards/dc-05-2016/) sent from the alarm. The integration does not require additional hardware.
 
 Note: a guide to controlling Pima Force (outside of this read-only integration) is available [here](https://docs.google.com/document/d/14H0u2NchUvVmQAxFU8D5C2-KNui8gWwFPb2p-ZRuWFo).
 
