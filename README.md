@@ -61,17 +61,17 @@ The alarm's keypad has limited capabilities, so here are a few tips on how to us
 
 ### Monitoring Station
 
-Home Assistant IP:port should be configured as a Central Monitoring Station (CMS) in the alarm's configuration. The alarm sends the events to its monitoring stations.
+Home Assistant IP:port should be configured as a Central Monitoring Station (CMS) in the alarm's configuration. The alarm sends the events to its monitoring stations. There are 4 different settings which should be configured (please read carefully, or it won't work):
 
-- `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet) => Network Addresses`:
-  - `IP 1`: enter Home Assistant's IP address, e.g. `192.168.1.100`.
-  - `Port 1`: the port which is configured for the integration. The default port is the same in the alarm and the integration (`10001`) so there is no need to change it.
-- `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet) => Account IDs`:
-  - `Partition 1`: enter a 6-character account ID. The actual value is ignored, but must be present. `111111` will do (or anything else).
-- `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet)`:
-  - `Disable encryption`: this is not checked by default. Press enter (`⏎`) to disable encryption (which is not supported).
-- `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Event Reporting`:
-  - `Zone/output Toggle`: this is not checked by default. Press enter (`⏎`) to set the alarm to send events on zone status changes. Without this option selected, the relevant events won't be sent and the integration will not be notified when a zone is opened or closed.
+1. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet) => Network Addresses`:
+    - `IP 1`: enter Home Assistant's IP address, e.g. `192.168.1.100`.
+    - `Port 1`: the port which is configured for the integration. The default port is the same in the alarm and the integration (`10001`) so there is no need to change it.
+2. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet) => Account IDs`:
+    - `Partition 1`: enter a 6-character account ID. The actual value is ignored, but must be present. `111111` will do (or anything else).
+3. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet)`:
+    - `Disable encryption`: this is not checked by default. Press enter (`⏎`) to disable encryption (which is not supported).
+4. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Event Reporting`:
+    - `Zone/output Toggle`: this is not checked by default. Press enter (`⏎`) to set the alarm to send events on zone status changes. Without this option selected, the relevant events won't be sent and the integration will not be notified when a zone is open or closed.
 
 ## Binary Sensors
 
