@@ -1,4 +1,4 @@
-pytest-homeassistant-custom-component
 pysiaalarm>=3.2.1
 ruff
 mypy
+prek

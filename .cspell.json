@@ -17,6 +17,7 @@
     "levelname",
     "levelno",
     "mypy",
+    "prek",
     "pysiaalarm",
     "pytest",
     "PYTHONPATH",
