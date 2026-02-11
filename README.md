@@ -30,7 +30,7 @@ The integration should also be added to the configuration. This can be done usin
 
 There are 2 fields:
 1. `Port`: the port to listen for incoming events. The default is `10001`, which is also the default port in the alarm. It should be kept as is unless there is a specific reason not to.
-2. `Zone names`: an ordered list of zones that should be copied from the alarm's zone list. If a specific zone in the alarm is not used, there should be a corresponding empty item on the list. For example, if the alarm has 3 zones: "zone 1: door, zone 2: [not used], zone 3: window", the list should be "door, [empty], window".
+2. `Zone names`: An ordered list of zone names as defined in the alarm system. The integration does not have access to the alarm’s configured zone names, so they must be entered manually and in the correct order. If a specific zone in the alarm is not used, there should be a corresponding empty item on the list to preserve zone number alignment. For example, if the alarm has 3 zones: 1=door, 2=[not used], 3=window, the list should be `door, [empty], window`.
 
 After the component is installed, it can be reconfigured using the Configure dialog, which can be accessed via this My button:
 
