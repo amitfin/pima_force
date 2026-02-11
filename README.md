@@ -69,6 +69,7 @@ Home Assistant IP:port should be configured as a Central Monitoring Station (CMS
 2. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet) => Account IDs`:
     - `Partition 1`: enter a 6-character account ID. The actual value is ignored, but must be present. `111111` will do (or anything else).
 3. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet)`:
+    - `Account ID length`: change it from 16 to 6 so it matches the length of the account ID entered in the previous step.
     - `Disable encryption`: this is not checked by default. Press enter (`⏎`) to disable encryption (which is not supported).
 4. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Event Reporting`:
     - `Zone/output Toggle`: this is not checked by default. Press enter (`⏎`) to set the alarm to send events on zone status changes. Without this option selected, the relevant events won't be sent and the integration will not be notified when a zone is open or closed.
@@ -150,7 +151,7 @@ actions:
             milliseconds: 500
         - variables:
             entity_id: |-
-              {{ 
+              {{
                 states.binary_sensor |
                 selectattr('entity_id', 'in', integration_entities('pima_force')) |
                 sort(attribute='attributes.last_set', reverse=True) |
