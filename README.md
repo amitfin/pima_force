@@ -225,9 +225,9 @@ target:
   entity_id: binary_sensor.pima_force_10001_zone5
 ```
 
-## Debugging
+## Troubleshooting
 
-Below are some debugging tips, mainly focused on the initial setup:
+Below are some troubleshooting tips, mainly focused on the initial setup:
 1. After configuring the alarm, verify its status. If the alarm has a communication issue with its CMS (in this case, the integration), an error message should appear on the keypad screen.
 2. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging) for the integration and check whether the logs contain entries indicating that SIA messages are being received and processed:
 ```
