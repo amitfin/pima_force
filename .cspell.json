@@ -24,6 +24,7 @@
     "rejectattr",
     "selectattr",
     "timeband",
-    "venv"
+    "venv",
+    "xdata"
   ]
 }
