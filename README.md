@@ -229,7 +229,7 @@ target:
 
 Below are some debugging tips, mainly focused on the initial setup:
 1. After configuring the alarm, verify its status. If the alarm has a communication issue with its CMS (in this case, the integration), an error message should appear on the keypad screen.
-2. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging)) for the integration and check whether the logs contain entries indicating that SIA messages are being received and processed:
+2. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging) for the integration and check whether the logs contain entries indicating that SIA messages are being received and processed:
 ```
 [pysiaalarm.base_server] Incoming line: 9A940041"ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026
 [pysiaalarm.event] Content matches: {'account': 'AAAAAA', 'event_qualifier': '1', 'event_type': '760', 'partition': '01', 'ri': '032', 'xdata': None, 'timestamp': '17:04:37,02-12-2026'}
