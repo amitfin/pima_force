@@ -225,6 +225,18 @@ target:
   entity_id: binary_sensor.pima_force_10001_zone5
 ```
 
+## Debugging
+
+Below are some debugging tips, mainly focused on the initial setup:
+1. After configuring the alarm, verify its status. If the alarm has a communication issue with its CMS (in this case, the integration), an error message should appear on the keypad screen.
+2. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging)) for the integration and check whether the logs contain entries indicating that SIA messages are being received and processed:
+```
+[pysiaalarm.base_server] Incoming line: 9A940041"ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026
+[pysiaalarm.event] Content matches: {'account': 'AAAAAA', 'event_qualifier': '1', 'event_type': '760', 'partition': '01', 'ri': '032', 'xdata': None, 'timestamp': '17:04:37,02-12-2026'}
+[pysiaalarm.aio.server] Incoming event: Content: #AAAAAA|1760 01 032]_17:04:37,02-12-2026, Zone (ri): 032, Code: YN, Message: , Account: AAAAAA, Receiver: R1, Line: L0, Timestamp: 2026-02-12 17:04:37+00:00, Length: 0041, Sequence: 0141, CRC: 9A94, Calc CRC: 9A94, Encrypted Content: None, Full Message: "ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026.
+[pysiaalarm.aio.server] Outgoing line: b'\n53C40018"ACK"0141R1L0#AAAAAA[KC]\r'
+```
+
 ## Uninstall
 
 1. **Delete the configuration:**
