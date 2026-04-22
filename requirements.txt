@@ -1,4 +1,4 @@
-pysiaalarm>=3.2.1
+pysiaalarm>=3.2.2
 ruff
 mypy
 prek
