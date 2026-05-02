@@ -74,7 +74,7 @@ def pytest_runtest_call(item: pytest.Item) -> Any:
             for allowed_log in chain(
                 allowed_logs, ["We found a custom integration pima_force"]
             )
-        ):
+        ) or (message.startswith("Executing <Task") and message.endswith(" seconds")):
             continue
         pytest.fail(f"Disallowed {record.levelname} log: {message}")
 
