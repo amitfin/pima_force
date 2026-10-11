@@ -22,7 +22,6 @@ class PimaForceEntity(CoordinatorEntity[PimaForceDataUpdateCoordinator]):
     def __init__(self, config_entry: PimaForceConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(config_entry.runtime_data.coordinator)
-        self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             translation_key="default",
             manufacturer=DEVICE_MANUFACTURER,

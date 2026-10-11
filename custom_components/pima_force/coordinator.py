@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from . import PimaForceConfigEntry
 
 
-class PimaForceDataUpdateCoordinator(DataUpdateCoordinator):
+class PimaForceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage Pima Force data."""
 
     def __init__(
@@ -35,8 +35,7 @@ class PimaForceDataUpdateCoordinator(DataUpdateCoordinator):
         config_entry: PimaForceConfigEntry,
     ) -> None:
         """Initialize global data updater."""
-        super().__init__(hass, LOGGER, name=DOMAIN)
-        self._config_entry = config_entry
+        super().__init__(hass, LOGGER, config_entry=config_entry, name=DOMAIN)
         self.zones: dict[int, bool] = {}  # zone number -> open state
         self._sia_client = SIAClient(  # type: ignore[abstract]
             "",

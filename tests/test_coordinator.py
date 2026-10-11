@@ -107,3 +107,14 @@ async def test_coordinator_start_stop_calls_client(
 
     auto_mock_sia_client_tcp.async_start.assert_awaited_once()
     auto_mock_sia_client_tcp.async_stop.assert_awaited_once()
+
+
+async def test_coordinator_config_entry(hass: HomeAssistant) -> None:
+    """Test the coordinator is bound to its config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_PORT: DEFAULT_LISTENING_PORT},
+    )
+    coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
+
+    assert coordinator.config_entry is config_entry
