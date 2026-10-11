@@ -95,7 +95,7 @@ Zone state lives in `coordinator.zones`.
 ## Commands
 
 ```bash
-scripts/setup          # install deps (uv), pytest-homeassistant-custom-component, prek hooks
+scripts/setup [ver]    # install deps (uv), pytest-homeassistant-custom-component (latest, or ==ver), prek hooks
 scripts/lint           # ruff format + ruff check --fix + mypy --strict
 scripts/lint --no-fix  # CI mode
 pytest                 # runs with --cov-fail-under=100 (pytest.ini)
@@ -106,6 +106,12 @@ Run `scripts/lint` and `pytest` after every change. Both also run as prek
 pre-commit hooks and in CI (`.github/workflows/lint.yml`, `validate.yml`, which
 also runs hassfest and HACS validation). Ruff also formats Python code blocks
 inside Markdown files.
+
+CI runs the tests twice: against the minimum Home Assistant version and against
+the latest. Each `pytest-homeassistant-custom-component` version pins one exact
+Home Assistant version. The minimum job installs the plugin version from the
+`validate.yml` matrix, and fails if that doesn't install the `hacs.json`
+version.
 
 ## Testing conventions
 
@@ -156,4 +162,7 @@ Publishing a GitHub release runs `.github/workflows/release.yml`. It writes the
 tag into `manifest.json` `version`, zips `custom_components/pima_force`, and
 attaches `pima_force.zip`, which HACS installs (`zip_release: true`). Do not
 bump `manifest.json` `version` by hand. When raising the minimum HA version,
-update `hacs.json`.
+update `hacs.json` **and** the `minimum` entry's
+`pytest-homeassistant-custom-component` version in
+`.github/workflows/validate.yml`. Use the plugin release that pins that Home
+Assistant version.

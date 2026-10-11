@@ -38,8 +38,18 @@ jobs:
           category: integration
 
   test:
-    name: Tests
+    name: Tests (${{ matrix.homeassistant }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Its version pins the Home Assistant version. Keep the minimum in sync
+          # with "homeassistant" in hacs.json.
+          - homeassistant: minimum
+            pytest-homeassistant-custom-component: "0.13.371"
+          - homeassistant: latest
+            pytest-homeassistant-custom-component: ""
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v7
@@ -50,7 +60,20 @@ jobs:
           python-version: "3.14"
 
       - name: Install requirements
-        run: scripts/setup
+        run: scripts/setup ${{ matrix.pytest-homeassistant-custom-component }}
+
+      - name: Check the minimum Home Assistant version
+        if: matrix.homeassistant == 'minimum'
+        run: |
+          python - <<'EOF'
+          import json
+          from importlib.metadata import version
+
+          expected = json.load(open("hacs.json"))["homeassistant"]
+          installed = version("homeassistant")
+          assert installed == expected, f"Installed {installed}, hacs.json {expected}"
+          print(f"Home Assistant {installed}")
+          EOF
 
       - name: Run
         run: pytest
