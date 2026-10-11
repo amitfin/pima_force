@@ -99,19 +99,26 @@ class PimaForceZoneBinarySensor(
             for key in self._attr_extra_state_attributes:
                 if key in last_state.attributes:
                     self._attr_extra_state_attributes[key] = last_state.attributes[key]
+        self._apply_zone_state()
+
+    def _apply_zone_state(self) -> bool:
+        """Apply the coordinator's zone state and return whether it changed."""
+        if (
+            new_state := self.coordinator.zones.get(self._zone)
+        ) is None or new_state == self._attr_is_on:
+            return False
+        now = dt_util.now().isoformat()
+        self._attr_extra_state_attributes[ATTR_LAST_SET] = now
+        if new_state:
+            self._attr_extra_state_attributes[ATTR_LAST_OPEN] = now
+        else:
+            self._attr_extra_state_attributes[ATTR_LAST_CLOSE] = now
+        self._attr_is_on = new_state
+        return True
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            new_state := self.coordinator.zones.get(self._zone)
-        ) is not None and new_state != self._attr_is_on:
-            now = dt_util.now().isoformat()
-            self._attr_extra_state_attributes[ATTR_LAST_SET] = now
-            if new_state:
-                self._attr_extra_state_attributes[ATTR_LAST_OPEN] = now
-            else:
-                self._attr_extra_state_attributes[ATTR_LAST_CLOSE] = now
-            self._attr_is_on = new_state
+        if self._apply_zone_state():
             super()._handle_coordinator_update()
 
     async def async_set_open(self) -> None:

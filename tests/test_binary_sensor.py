@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock
+from typing import TYPE_CHECKING, Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pysiaalarm.event import SIAEvent
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+)
 
 from custom_components.pima_force import PimaForceRuntimeData
 from custom_components.pima_force.binary_sensor import PimaForceZoneBinarySensor
 from custom_components.pima_force.const import (
+    ADM_CID_EVENT_QUALIFIER_CLOSE,
+    ADM_CID_PIMA_ZONE_STATUS_CODE,
     ATTR_LAST_CLOSE,
     ATTR_LAST_OPEN,
     ATTR_LAST_SET,
@@ -100,9 +106,11 @@ async def test_async_setup_entry_adds_named_zones(hass: HomeAssistant) -> None:
 
 
 async def test_is_on_prefers_live_zone_state(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test live zone values override restored state."""
+    """Test a zone state received before the entity is added wins over restore."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         options={CONF_PORT: DEFAULT_LISTENING_PORT},
@@ -116,15 +124,77 @@ async def test_is_on_prefers_live_zone_state(
     monkeypatch.setattr(
         sensor,
         "async_get_last_state",
-        AsyncMock(return_value=_stored_state("binary_sensor.front_door", STATE_ON)),
+        AsyncMock(
+            return_value=_stored_state_with_attrs(
+                "binary_sensor.front_door",
+                STATE_ON,
+                {
+                    ATTR_LAST_OPEN: "2023-12-31T00:00:00+00:00",
+                    ATTR_LAST_CLOSE: "2023-12-30T00:00:00+00:00",
+                    ATTR_LAST_SET: "2023-12-31T00:00:00+00:00",
+                },
+            )
+        ),
     )
     write_state = MagicMock()
     monkeypatch.setattr(sensor, "async_write_ha_state", write_state)
+    freezer.move_to(NOW)
+    now = dt_util.now().isoformat()
 
     await sensor.async_added_to_hass()
-    coordinator.async_update_listeners()
 
     assert sensor.is_on is False
+    assert sensor.extra_state_attributes == {
+        ATTR_ZONE: 1,
+        ATTR_LAST_OPEN: "2023-12-31T00:00:00+00:00",
+        ATTR_LAST_CLOSE: now,
+        ATTR_LAST_SET: now,
+    }
+    # Home Assistant writes the state once the entity is added.
+    write_state.assert_not_called()
+
+
+async def test_event_during_setup_overrides_restored_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test an event received before platform setup is reflected in the state."""
+    entity_id = f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone1"
+    mock_restore_cache(hass, [State(entity_id, STATE_ON)])
+
+    def _sia_client(*args: Any) -> MagicMock:
+        process_event = args[3]
+        client = MagicMock()
+        client.async_stop = AsyncMock()
+
+        async def _start() -> None:
+            await process_event(
+                SIAEvent(
+                    event_type=ADM_CID_PIMA_ZONE_STATUS_CODE,
+                    event_qualifier=ADM_CID_EVENT_QUALIFIER_CLOSE,
+                    ri="001",
+                )
+            )
+
+        client.async_start = _start
+        return client
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_PORT: DEFAULT_LISTENING_PORT,
+            CONF_ZONES: [{CONF_NAME: "Front Door"}],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.pima_force.coordinator.SIAClient", side_effect=_sia_client
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
