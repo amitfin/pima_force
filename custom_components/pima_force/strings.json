@@ -36,6 +36,11 @@
             "name": "Pima Force"
         }
     },
+    "exceptions": {
+        "invalid_config_entry": {
+            "message": "Config entry {entry_id} was not found or does not belong to Pima Force."
+        }
+    },
     "services": {
         "get_zones": {
             "name": "Get zones",

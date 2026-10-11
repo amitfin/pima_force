@@ -36,6 +36,11 @@
             "name": "פימא פורס"
         }
     },
+    "exceptions": {
+        "invalid_config_entry": {
+            "message": "רשומת התצורה {entry_id} לא נמצאה או שאינה שייכת לפימא פורס."
+        }
+    },
     "services": {
         "get_zones": {
             "name": "קריאת האזורים",

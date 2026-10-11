@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
@@ -61,14 +61,46 @@ async def test_async_setup_get_zones_action(hass: HomeAssistant) -> None:
     )
     assert response == {CONF_ZONES: ["Front Door", ""]}
 
-    with pytest.raises(HomeAssistantError):
+
+@pytest.mark.parametrize(
+    ("service", "data", "return_response"),
+    [
+        (SERVICE_GET_ZONES, {}, True),
+        (SERVICE_SET_ZONES, {CONF_ZONES: ["Front Door"]}, False),
+    ],
+)
+@pytest.mark.parametrize("foreign_domain", [None, "sun"])
+async def test_async_setup_zones_actions_reject_invalid_entry(
+    hass: HomeAssistant,
+    service: str,
+    data: dict[str, Any],
+    foreign_domain: str | None,
+    *,
+    return_response: bool,
+) -> None:
+    """Test zone actions reject missing and other integrations' config entries."""
+    entry_id = "missing_entry"
+    foreign_entry = None
+    if foreign_domain:
+        foreign_entry = MockConfigEntry(domain=foreign_domain, options={"key": 1})
+        foreign_entry.add_to_hass(hass)
+        entry_id = foreign_entry.entry_id
+
+    assert await async_setup(hass, {})
+
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_ZONES,
-            {ATTR_CONFIG_ENTRY_ID: "missing_entry"},
+            service,
+            {ATTR_CONFIG_ENTRY_ID: entry_id, **data},
             blocking=True,
-            return_response=True,
+            return_response=return_response,
         )
+
+    assert err.value.translation_key == "invalid_config_entry"
+    assert err.value.translation_placeholders == {"entry_id": entry_id}
+    if foreign_entry:
+        assert foreign_entry.options == {"key": 1}
 
 
 async def test_async_setup_set_zones_action(hass: HomeAssistant) -> None:

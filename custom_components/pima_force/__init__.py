@@ -10,6 +10,7 @@ from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, Platform
 from homeassistant.core import ServiceResponse, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
 from custom_components.pima_force.const import (
@@ -55,36 +56,44 @@ class PimaForceRuntimeData:
 type PimaForceConfigEntry = ConfigEntry[PimaForceRuntimeData]
 
 
+@callback
+def _async_get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
+    """Return the integration's config entry or raise if it doesn't exist."""
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if config_entry is None or config_entry.domain != DOMAIN:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={"entry_id": entry_id},
+        )
+    return config_entry
+
+
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration."""
 
     @callback
     async def async_get_zones(call: ServiceCall) -> ServiceResponse:
         """Return zone list."""
-        if config_entry := hass.config_entries.async_get_entry(
-            call.data[ATTR_CONFIG_ENTRY_ID]
-        ):
-            return {
-                CONF_ZONES: [
-                    zone.get(CONF_NAME, "")
-                    for zone in config_entry.options.get(CONF_ZONES, [])
-                ]
-            }
-        return None
+        config_entry = _async_get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        return {
+            CONF_ZONES: [
+                zone.get(CONF_NAME, "")
+                for zone in config_entry.options.get(CONF_ZONES, [])
+            ]
+        }
 
     @callback
     async def async_set_zones(call: ServiceCall) -> None:
         """Set zone list for a config entry."""
-        if config_entry := hass.config_entries.async_get_entry(
-            call.data[ATTR_CONFIG_ENTRY_ID]
-        ):
-            hass.config_entries.async_update_entry(
-                config_entry,
-                options={
-                    **config_entry.options,
-                    CONF_ZONES: [{CONF_NAME: zone} for zone in call.data[CONF_ZONES]],
-                },
-            )
+        config_entry = _async_get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={
+                **config_entry.options,
+                CONF_ZONES: [{CONF_NAME: zone} for zone in call.data[CONF_ZONES]],
+            },
+        )
 
     hass.services.async_register(
         DOMAIN,
