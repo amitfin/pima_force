@@ -82,6 +82,8 @@ The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For
 
 Changing the port in the Configure dialog renames the entities to the new port, after a confirmation step. Entity IDs that were customized in Home Assistant are left unchanged. Entity history is kept, but automations, scripts and dashboards that use the old entity IDs need to be updated.
 
+With more than one panel, rename each panel's device in Home Assistant (e.g., `Pima Force Home`) to tell their sensors apart, since the sensors' names start with the device name.
+
 The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/). It's not required to change the device class and it doesn't impact the underlying implementation. It can be done for UI purposes, like changing the icon and displayed state (which is translated based on the device class).
 
 Each sensor exposes attributes (timestamps are local time, ISO 8601):
