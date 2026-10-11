@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+import probatio
 from homeassistant.components import binary_sensor
+from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_ON
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 
 PARALLEL_UPDATES = 0
 
-SERVICE_SCHEMA = cv.make_entity_service_schema(None, extra=vol.ALLOW_EXTRA)
+SERVICE_SCHEMA = cv.make_entity_service_schema(None, extra=probatio.ALLOW_EXTRA)
 
 
 async def async_setup_entry(
@@ -66,7 +67,7 @@ class PimaForceZoneBinarySensor(
 ):
     """Representation of the alert sensor base."""
 
-    _attr_device_class = binary_sensor.BinarySensorDeviceClass.DOOR
+    _attr_device_class = BinarySensorDeviceClass.DOOR
     _unrecorded_attributes = frozenset(
         {ATTR_ZONE, ATTR_LAST_SET, ATTR_LAST_OPEN, ATTR_LAST_CLOSE}
     )

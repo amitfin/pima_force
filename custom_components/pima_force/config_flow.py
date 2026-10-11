@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+import probatio
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -30,10 +30,10 @@ ZONES_SCHEMA = selector.ObjectSelector(
     )
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PORT, default=DEFAULT_LISTENING_PORT): cv.positive_int,
-        vol.Optional(CONF_ZONES): ZONES_SCHEMA,
+        probatio.Required(CONF_PORT, default=DEFAULT_LISTENING_PORT): cv.positive_int,
+        probatio.Optional(CONF_ZONES): ZONES_SCHEMA,
     }
 )
 
@@ -83,12 +83,12 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_PORT, default=self._config_entry.options[CONF_PORT]
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONES, default=self._config_entry.options.get(CONF_ZONES)
                     ): ZONES_SCHEMA,
                 }

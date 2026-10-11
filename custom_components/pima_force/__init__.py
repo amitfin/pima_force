@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+import probatio
 from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, Platform
@@ -28,19 +28,19 @@ if TYPE_CHECKING:
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.BINARY_SENSOR,)
-SERVICE_GET_ZONES_SCHEMA = vol.Schema(
+SERVICE_GET_ZONES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
             selector.ConfigEntrySelectorConfig(integration=DOMAIN)
         )
     }
 )
-SERVICE_SET_ZONES_SCHEMA = vol.Schema(
+SERVICE_SET_ZONES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
             selector.ConfigEntrySelectorConfig(integration=DOMAIN)
         ),
-        vol.Required(CONF_ZONES): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_ZONES): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 
