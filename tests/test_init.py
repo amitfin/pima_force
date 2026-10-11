@@ -7,7 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -150,6 +156,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
     coordinator = MagicMock()
     coordinator.async_start = AsyncMock()
+    coordinator.async_stop = AsyncMock()
     with patch(
         "custom_components.pima_force.PimaForceDataUpdateCoordinator",
         return_value=coordinator,
@@ -206,6 +213,28 @@ async def test_async_setup_entry_forward_failure_stops_server(
         await async_setup_entry(hass, config_entry)
 
     coordinator.async_stop.assert_awaited_once()
+
+
+async def test_sia_server_stopped_when_home_assistant_stops(
+    hass: HomeAssistant, auto_mock_sia_client_tcp: MagicMock
+) -> None:
+    """Test the SIA server is stopped on stop, and the listener removed on unload."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_PORT: DEFAULT_LISTENING_PORT}
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    auto_mock_sia_client_tcp.async_stop.assert_awaited_once()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    auto_mock_sia_client_tcp.async_stop.reset_mock()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    auto_mock_sia_client_tcp.async_stop.assert_not_awaited()
 
 
 async def test_config_entry_update_listener(hass: HomeAssistant) -> None:

@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING
 import homeassistant.helpers.config_validation as cv
 import probatio
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import selector
@@ -22,7 +28,7 @@ from .const import (
 from .coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.core import Event, HomeAssistant, ServiceCall
     from homeassistant.helpers.typing import ConfigType
 
 
@@ -133,6 +139,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PimaForceConfigEntry) ->
         # The entry isn't unloaded when setup fails, so release the port here.
         await coordinator.async_stop()
         raise
+
+    async def _async_stop(_: Event) -> None:
+        await coordinator.async_stop()
+
+    # Entries aren't unloaded when Home Assistant stops, so stop the server here.
+    entry.async_on_unload(hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop))
     return True
 
 
