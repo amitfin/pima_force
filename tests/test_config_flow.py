@@ -2,8 +2,9 @@
 
 from typing import TYPE_CHECKING, Any
 
+import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force.config_flow import (
@@ -139,3 +140,27 @@ async def test_options_flow_rejects_port_of_other_entry(hass: HomeAssistant) -> 
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("data") == {CONF_PORT: 6000, CONF_ZONES: new_zones}
+
+
+@pytest.mark.parametrize("port", [0, 65536])
+async def test_flows_reject_invalid_port(hass: HomeAssistant, port: int) -> None:
+    """Test the user and options flows reject ports outside 1-65535."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    with pytest.raises(InvalidData) as err:
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PORT: port}
+        )
+    assert err.value.schema_errors == {
+        CONF_PORT: "expected a port number between 1 and 65535"
+    }
+
+    config_entry = MockConfigEntry(domain=DOMAIN, options={CONF_PORT: 5000})
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_PORT: port}
+        )
+    assert config_entry.options == {CONF_PORT: 5000}

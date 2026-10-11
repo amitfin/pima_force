@@ -32,7 +32,7 @@ ZONES_SCHEMA = selector.ObjectSelector(
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PORT, default=DEFAULT_LISTENING_PORT): cv.positive_int,
+        probatio.Required(CONF_PORT, default=DEFAULT_LISTENING_PORT): cv.port,
         probatio.Optional(CONF_ZONES): ZONES_SCHEMA,
     }
 )
@@ -91,9 +91,7 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(
-                        CONF_PORT, default=values[CONF_PORT]
-                    ): cv.positive_int,
+                    probatio.Required(CONF_PORT, default=values[CONF_PORT]): cv.port,
                     probatio.Optional(
                         CONF_ZONES, default=values.get(CONF_ZONES)
                     ): ZONES_SCHEMA,
