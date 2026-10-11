@@ -90,3 +90,52 @@ async def test_options_flow_updates_port(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("data") == {CONF_PORT: 6000, CONF_ZONES: zones}
     assert config_entry.title == f"{TITLE} 6000"
+
+
+async def test_flow_user_aborts_on_duplicate_port(hass: HomeAssistant) -> None:
+    """Test the user flow aborts when the port is already used by an entry."""
+    MockConfigEntry(
+        domain=DOMAIN, options={CONF_PORT: DEFAULT_LISTENING_PORT}
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: _zones()},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
+async def test_options_flow_rejects_port_of_other_entry(hass: HomeAssistant) -> None:
+    """Test the options flow rejects a port used by another entry."""
+    MockConfigEntry(domain=DOMAIN, options={CONF_PORT: 5000}).add_to_hass(hass)
+    zones = _zones()
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"{TITLE} 6000",
+        options={CONF_PORT: 6000, CONF_ZONES: zones},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    new_zones = [{CONF_NAME: "Back Door"}]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_PORT: 5000, CONF_ZONES: new_zones},
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") == {CONF_PORT: "already_configured"}
+    assert _schema_default(result.get("data_schema"), CONF_PORT) == 5000
+    assert _schema_default(result.get("data_schema"), CONF_ZONES) == new_zones
+    assert config_entry.options == {CONF_PORT: 6000, CONF_ZONES: zones}
+    assert config_entry.title == f"{TITLE} 6000"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_PORT: 6000, CONF_ZONES: new_zones},
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {CONF_PORT: 6000, CONF_ZONES: new_zones}
