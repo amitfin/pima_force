@@ -20,6 +20,8 @@ from custom_components.pima_force.const import (
 )
 
 if TYPE_CHECKING:
+    from unittest.mock import MagicMock
+
     from homeassistant.core import HomeAssistant
 
 
@@ -182,7 +184,7 @@ async def _setup_entry_with_zones(
 
 
 async def test_options_flow_port_change_renames_entities(
-    hass: HomeAssistant,
+    hass: HomeAssistant, auto_mock_sia_client_tcp: MagicMock
 ) -> None:
     """Test a confirmed port change renames default entity IDs only."""
     config_entry = await _setup_entry_with_zones(
@@ -212,11 +214,13 @@ async def test_options_flow_port_change_renames_entities(
     }
     assert config_entry.options[CONF_PORT] == 10001
 
+    auto_mock_sia_client_tcp.async_start.reset_mock()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
     await hass.async_block_till_done()
     assert result.get("type") == FlowResultType.CREATE_ENTRY
+    auto_mock_sia_client_tcp.async_start.assert_awaited_once()
     assert config_entry.options == {CONF_PORT: 10002, CONF_ZONES: new_zones}
     assert config_entry.title == f"{TITLE} 10002"
     assert sorted(
@@ -246,7 +250,9 @@ async def test_options_flow_port_change_closed_dialog(hass: HomeAssistant) -> No
     assert er.async_get(hass).async_get("binary_sensor.pima_force_10001_zone1")
 
 
-async def test_options_flow_port_change_without_renames(hass: HomeAssistant) -> None:
+async def test_options_flow_port_change_without_renames(
+    hass: HomeAssistant, auto_mock_sia_client_tcp: MagicMock
+) -> None:
     """Test a port change saves directly when no entity ID would change."""
     config_entry = await _setup_entry_with_zones(hass, [{CONF_NAME: "Front Door"}])
     er.async_get(hass).async_update_entity(
@@ -254,6 +260,7 @@ async def test_options_flow_port_change_without_renames(hass: HomeAssistant) -> 
         new_entity_id="binary_sensor.front_door",
     )
     await hass.async_block_till_done()
+    auto_mock_sia_client_tcp.async_start.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -263,7 +270,10 @@ async def test_options_flow_port_change_without_renames(hass: HomeAssistant) -> 
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_PORT] == 10002
+    assert config_entry.title == f"{TITLE} 10002"
     assert er.async_get(hass).async_get("binary_sensor.front_door")
+    # The title and the options are saved together, so it's reloaded once.
+    auto_mock_sia_client_tcp.async_start.assert_awaited_once()
 
 
 async def test_options_flow_same_port_keeps_title(hass: HomeAssistant) -> None:

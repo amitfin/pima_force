@@ -152,8 +152,11 @@ class OptionsFlowHandler(OptionsFlow):
     def _async_save(self) -> ConfigFlowResult:
         """Save the options, updating the title if the port changed."""
         if self.config_entry.options[CONF_PORT] != self._options[CONF_PORT]:
+            # Update both at once, so the entry is reloaded only once.
             self.hass.config_entries.async_update_entry(
-                self.config_entry, title=f"{TITLE} {self._options[CONF_PORT]}"
+                self.config_entry,
+                title=f"{TITLE} {self._options[CONF_PORT]}",
+                options=self._options,
             )
         return self.async_create_entry(data=self._options)
 
