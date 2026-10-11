@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import homeassistant.helpers.config_validation as cv
 import probatio
-from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import ServiceResponse, SupportsResponse, callback
