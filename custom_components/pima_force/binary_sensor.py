@@ -37,6 +37,11 @@ PARALLEL_UPDATES = 0
 SERVICE_SCHEMA = cv.make_entity_service_schema(None, extra=probatio.ALLOW_EXTRA)
 
 
+def zone_entity_id(port: int, zone: int) -> str:
+    """Return the default entity ID of a zone's entity."""
+    return f"binary_sensor.{DOMAIN}_{port}_zone{zone}"
+
+
 def _unique_id(config_entry: PimaForceConfigEntry, zone: int) -> str:
     """Return the unique ID of a zone's entity."""
     return f"{config_entry.entry_id}_{zone}"
@@ -91,9 +96,7 @@ class PimaForceZoneBinarySensor(
         """Initialize object with defaults."""
         super().__init__(config_entry)
         self._attr_unique_id = _unique_id(config_entry, zone)
-        self.entity_id = (
-            f"binary_sensor.{DOMAIN}_{config_entry.options[CONF_PORT]}_zone{zone}"
-        )
+        self.entity_id = zone_entity_id(config_entry.options[CONF_PORT], zone)
         self._attr_name = name
         self._attr_is_on = False
         self._attr_extra_state_attributes = {

@@ -80,6 +80,8 @@ The integration creates a binary sensor for each zone. It skips zones with an em
 
 The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For example: `binary_sensor.pima_force_10001_zone5`.
 
+Changing the port in the Configure dialog renames the entities to the new port, after a confirmation step. Entity IDs that were customized in Home Assistant are left unchanged. Entity history is kept, but automations, scripts and dashboards that use the old entity IDs need to be updated.
+
 The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/). It's not required to change the device class and it doesn't impact the underline implementation. It can be done for UI purposes, like changing the icon and displayed state (which is translated based on the device class).
 
 Each sensor exposes attributes (timestamps are local time, ISO 8601):

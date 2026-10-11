@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force.config_flow import (
@@ -164,3 +165,102 @@ async def test_flows_reject_invalid_port(hass: HomeAssistant, port: int) -> None
             result["flow_id"], user_input={CONF_PORT: port}
         )
     assert config_entry.options == {CONF_PORT: 5000}
+
+
+async def _setup_entry_with_zones(
+    hass: HomeAssistant, zones: list[dict[str, str]]
+) -> MockConfigEntry:
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"{TITLE} 10001",
+        options={CONF_PORT: 10001, CONF_ZONES: zones},
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
+
+
+async def test_options_flow_port_change_renames_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test a confirmed port change renames default entity IDs only."""
+    config_entry = await _setup_entry_with_zones(
+        hass,
+        [{CONF_NAME: "Front Door"}, {CONF_NAME: "Back Door"}, {CONF_NAME: "Garage"}],
+    )
+    registry = er.async_get(hass)
+    registry.async_update_entity(
+        "binary_sensor.pima_force_10001_zone2",
+        new_entity_id="binary_sensor.back_door",
+    )
+    await hass.async_block_till_done()
+    new_zones = [{CONF_NAME: ""}, {CONF_NAME: "Back Door"}, {CONF_NAME: "Garage"}]
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: 10002, CONF_ZONES: new_zones}
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "confirm_port_change"
+    assert result.get("description_placeholders") == {
+        "old_port": "10001",
+        "new_port": "10002",
+        "name": "Garage",
+        "old_entity_id": "binary_sensor.pima_force_10001_zone3",
+        "new_entity_id": "binary_sensor.pima_force_10002_zone3",
+    }
+    assert config_entry.options[CONF_PORT] == 10001
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_PORT: 10002, CONF_ZONES: new_zones}
+    assert config_entry.title == f"{TITLE} 10002"
+    assert sorted(
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(registry, config_entry.entry_id)
+    ) == ["binary_sensor.back_door", "binary_sensor.pima_force_10002_zone3"]
+    state = hass.states.get("binary_sensor.pima_force_10002_zone3")
+    assert state is not None
+    assert state.name == "Pima Force Garage"
+    assert hass.states.get("binary_sensor.pima_force_10001_zone3") is None
+
+
+async def test_options_flow_port_change_closed_dialog(hass: HomeAssistant) -> None:
+    """Test closing the confirmation dialog keeps the port and entity IDs."""
+    config_entry = await _setup_entry_with_zones(hass, [{CONF_NAME: "Front Door"}])
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: 10002}
+    )
+    assert result.get("step_id") == "confirm_port_change"
+    hass.config_entries.options.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert config_entry.options[CONF_PORT] == 10001
+    assert config_entry.title == f"{TITLE} 10001"
+    assert er.async_get(hass).async_get("binary_sensor.pima_force_10001_zone1")
+
+
+async def test_options_flow_port_change_without_renames(hass: HomeAssistant) -> None:
+    """Test a port change saves directly when no entity ID would change."""
+    config_entry = await _setup_entry_with_zones(hass, [{CONF_NAME: "Front Door"}])
+    er.async_get(hass).async_update_entity(
+        "binary_sensor.pima_force_10001_zone1",
+        new_entity_id="binary_sensor.front_door",
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: 10002}
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_PORT] == 10002
+    assert er.async_get(hass).async_get("binary_sensor.front_door")

@@ -21,6 +21,10 @@
                     "port": "[%key:common::config_flow::data::port%]",
                     "zones": "Zone Names"
                 }
+            },
+            "confirm_port_change": {
+                "title": "Change port to {new_port}?",
+                "description": "Changing the port renames the entity IDs of this panel's zone sensors. For example, the entity ID of \"{name}\" will change from `{old_entity_id}` to `{new_entity_id}`.\n\nUpdate any automations, scripts or dashboards that use these entity IDs. The entities keep their history. To keep port {old_port}, close this dialog."
             }
         },
         "error": {
