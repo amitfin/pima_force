@@ -606,3 +606,25 @@ async def test_removed_zones_are_removed_from_registry(hass: HomeAssistant) -> N
         hass.states.get(f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone3")
         is None
     )
+
+
+async def test_real_panel_message_updates_state(hass: HomeAssistant) -> None:
+    """Test a real ADM-CID line, parsed by pysiaalarm, opens the zone."""
+    # The README's sample message: zone 032 opened (event 760, qualifier 1).
+    line = '9A940041"ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026'
+    zones = [{CONF_NAME: ""}] * 31 + [{CONF_NAME: "Safe"}]
+    await _setup_entities(hass, "test_entry", zones)
+    config_entry = hass.config_entries.async_get_known_entry("test_entry")
+    entity_id = f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone32"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    event = SIAEvent.from_line(line)
+    assert event.valid_message
+    await config_entry.runtime_data.coordinator.process_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON

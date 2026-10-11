@@ -264,3 +264,23 @@ async def test_options_flow_port_change_without_renames(hass: HomeAssistant) -> 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_PORT] == 10002
     assert er.async_get(hass).async_get("binary_sensor.front_door")
+
+
+async def test_options_flow_same_port_keeps_title(hass: HomeAssistant) -> None:
+    """Test changing only the zones keeps the port and the title."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"{TITLE} 5000",
+        options={CONF_PORT: 5000, CONF_ZONES: _zones()},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    new_zones = [{CONF_NAME: "Front Door"}, {CONF_NAME: "Back Door"}]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: 5000, CONF_ZONES: new_zones}
+    )
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_PORT: 5000, CONF_ZONES: new_zones}
+    assert config_entry.title == f"{TITLE} 5000"

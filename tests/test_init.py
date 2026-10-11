@@ -41,8 +41,11 @@ async def test_setup(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) is None
 
 
 async def test_async_setup_get_zones_action(hass: HomeAssistant) -> None:

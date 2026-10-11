@@ -79,13 +79,14 @@ async def test_process_event_ignores_non_zone_event(hass: HomeAssistant) -> None
             ri="2",
         )
     )
-    await coordinator.process_event(
-        SIAEvent(
-            event_type=ADM_CID_PIMA_ZONE_STATUS_CODE,
-            event_qualifier=ADM_CID_EVENT_QUALIFIER_OPEN,
-            ri=None,
+    for ri in (None, "", "abc"):
+        await coordinator.process_event(
+            SIAEvent(
+                event_type=ADM_CID_PIMA_ZONE_STATUS_CODE,
+                event_qualifier=ADM_CID_EVENT_QUALIFIER_OPEN,
+                ri=ri,
+            )
         )
-    )
 
     assert coordinator.zones == {}
     coordinator.async_update_listeners.assert_not_called()
