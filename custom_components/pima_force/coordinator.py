@@ -80,4 +80,7 @@ class PimaForceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def async_stop(self) -> None:
         """Shutdown the SIA server."""
+        # pysiaalarm waits for open connections, such as the panel's, to close.
+        if (server := getattr(self._sia_client, "server", None)) is not None:
+            server.close_clients()
         await self._sia_client.async_stop()

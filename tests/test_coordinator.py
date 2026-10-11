@@ -1,9 +1,13 @@
 """Tests for the coordinator."""
 
+import asyncio
+import socket
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
+import pytest
 from homeassistant.const import CONF_PORT
+from pysiaalarm.aio.client import SIAClient
 from pysiaalarm.event import SIAEvent
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -107,7 +111,38 @@ async def test_coordinator_start_stop_calls_client(
     await coordinator.async_stop()
 
     auto_mock_sia_client_tcp.async_start.assert_awaited_once()
+    auto_mock_sia_client_tcp.server.close_clients.assert_called_once()
     auto_mock_sia_client_tcp.async_stop.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_coordinator_stop_with_open_connection(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test a real SIA server stops while the panel's connection is open."""
+    monkeypatch.setattr("custom_components.pima_force.coordinator.SIAClient", SIAClient)
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    coordinator = PimaForceDataUpdateCoordinator(
+        hass, MockConfigEntry(domain=DOMAIN, options={CONF_PORT: port})
+    )
+    coordinator.async_update_listeners = MagicMock()
+    await coordinator.async_start()
+
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    writer.write(
+        b'\n9A940041"ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026\r'
+    )
+    await writer.drain()
+    assert b'"ACK"' in await asyncio.wait_for(reader.readuntil(b"\r"), 5)
+    assert coordinator.zones == {32: True}
+
+    await asyncio.wait_for(coordinator.async_stop(), 5)
+    assert await asyncio.wait_for(reader.read(), 5) == b""
+    # Stopping again (e.g. unload after Home Assistant stopped) is a no-op.
+    await asyncio.wait_for(coordinator.async_stop(), 5)
+    writer.close()
 
 
 async def test_coordinator_config_entry(hass: HomeAssistant) -> None:
