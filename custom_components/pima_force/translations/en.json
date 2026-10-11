@@ -39,6 +39,9 @@
     "exceptions": {
         "invalid_config_entry": {
             "message": "Config entry {entry_id} was not found or does not belong to Pima Force."
+        },
+        "cannot_listen": {
+            "message": "Unable to listen on port {port}: {error}"
         }
     },
     "services": {

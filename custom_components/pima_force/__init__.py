@@ -8,9 +8,9 @@ import homeassistant.helpers.config_validation as cv
 import probatio
 from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, Platform
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import ServiceResponse, SupportsResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import selector
 
 from custom_components.pima_force.const import (
@@ -115,11 +115,25 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: PimaForceConfigEntry) -> bool:
     """Set up entity from a config entry."""
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
-    entry.runtime_data = PimaForceRuntimeData(
-        PimaForceDataUpdateCoordinator(hass, entry)
-    )
-    await entry.runtime_data.coordinator.async_start()
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    coordinator = PimaForceDataUpdateCoordinator(hass, entry)
+    entry.runtime_data = PimaForceRuntimeData(coordinator)
+    try:
+        await coordinator.async_start()
+    except OSError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_listen",
+            translation_placeholders={
+                "port": str(entry.options[CONF_PORT]),
+                "error": str(err),
+            },
+        ) from err
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        # The entry isn't unloaded when setup fails, so release the port here.
+        await coordinator.async_stop()
+        raise
     return True
 
 

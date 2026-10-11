@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_NAME, CONF_PORT, Platform
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import (
@@ -158,6 +159,50 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(
         config_entry, (Platform.BINARY_SENSOR,)
     )
+
+
+async def test_async_setup_entry_port_in_use(
+    hass: HomeAssistant, auto_mock_sia_client_tcp: MagicMock
+) -> None:
+    """Test setup is retried when the listening port can't be bound."""
+    auto_mock_sia_client_tcp.async_start.side_effect = OSError(
+        98, "Address already in use"
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_PORT: DEFAULT_LISTENING_PORT}
+    )
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        f"Unable to listen on port {DEFAULT_LISTENING_PORT}: "
+        "[Errno 98] Address already in use"
+    )
+
+
+async def test_async_setup_entry_forward_failure_stops_server(
+    hass: HomeAssistant,
+) -> None:
+    """Test the SIA server is stopped when platform setup fails."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_forward_entry_setups = AsyncMock(side_effect=RuntimeError)
+
+    coordinator = MagicMock()
+    coordinator.async_start = AsyncMock()
+    coordinator.async_stop = AsyncMock()
+    with (
+        patch(
+            "custom_components.pima_force.PimaForceDataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        await async_setup_entry(hass, config_entry)
+
+    coordinator.async_stop.assert_awaited_once()
 
 
 async def test_config_entry_update_listener(hass: HomeAssistant) -> None:
