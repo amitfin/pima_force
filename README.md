@@ -82,7 +82,7 @@ The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For
 
 Changing the port in the Configure dialog renames the entities to the new port, after a confirmation step. Entity IDs that were customized in Home Assistant are left unchanged. Entity history is kept, but automations, scripts and dashboards that use the old entity IDs need to be updated.
 
-The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/). It's not required to change the device class and it doesn't impact the underline implementation. It can be done for UI purposes, like changing the icon and displayed state (which is translated based on the device class).
+The default device class is `Door`, but it can be changed by [customizing the entity](https://www.home-assistant.io/docs/configuration/customizing-devices/). It's not required to change the device class and it doesn't impact the underlying implementation. It can be done for UI purposes, like changing the icon and displayed state (which is translated based on the device class).
 
 Each sensor exposes attributes (timestamps are local time, ISO 8601):
 - `zone`: zone number from the configured list.
@@ -185,7 +185,7 @@ to keep zone numbering aligned with the alarm. The response payload contains
 `zones`, an ordered list of strings.
 
 ```yaml
-service: pima_force.get_zones
+action: pima_force.get_zones
 data:
   config_entry_id: 1234567890abcdef1234567890abcdef
 ```
@@ -196,7 +196,7 @@ Replaces the zone name list for a specific config entry. Provide an ordered list
 of strings; use empty strings for unused zones.
 
 ```yaml
-service: pima_force.set_zones
+action: pima_force.set_zones
 data:
   config_entry_id: 1234567890abcdef1234567890abcdef
   zones:
@@ -211,7 +211,7 @@ Marks a zone as open in Home Assistant without sending anything to the alarm sys
 Use this only for testing automations and dashboards. The zone stays open until the alarm explicitly reports otherwise or `pima_force.set_closed` action is performed.
 
 ```yaml
-service: pima_force.set_open
+action: pima_force.set_open
 target:
   entity_id: binary_sensor.pima_force_10001_zone5
 ```
@@ -222,7 +222,7 @@ Marks a zone as closed in Home Assistant without sending anything to the alarm s
 Use this only for testing automations and dashboards. The zone stays closed until the alarm explicitly reports otherwise or `pima_force.set_open` action is performed.
 
 ```yaml
-service: pima_force.set_closed
+action: pima_force.set_closed
 target:
   entity_id: binary_sensor.pima_force_10001_zone5
 ```
@@ -232,7 +232,7 @@ target:
 Below are some troubleshooting tips, mainly focused on the initial setup:
 1. After configuring the alarm, verify its status. If the alarm is unable to communicate with its CMS (the integration, in this case), an error message should appear on the keypad screen.<br>
 Note that this error may also temporarily appear when Home Assistant is rebooted. In such cases, the message should clear automatically within a few minutes after Home Assistant has fully started and communication is restored.
-3. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging) for the integration and check whether the log contains entries indicating that SIA messages are being received and processed:
+2. [Enable debug logging](https://www.home-assistant.io/docs/configuration/troubleshooting/#enabling-debug-logging) for the integration and check whether the log contains entries indicating that SIA messages are being received and processed:
 ```
 [pysiaalarm.base_server] Incoming line: 9A940041"ADM-CID"0141R1L0#AAAAAA[#AAAAAA|1760 01 032]_17:04:37,02-12-2026
 [pysiaalarm.event] Content matches: {'account': 'AAAAAA', 'event_qualifier': '1', 'event_type': '760', 'partition': '01', 'ri': '032', 'xdata': None, 'timestamp': '17:04:37,02-12-2026'}

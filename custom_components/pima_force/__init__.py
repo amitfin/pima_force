@@ -1,4 +1,4 @@
-"""Update local files."""
+"""The Pima Force integration."""
 
 from __future__ import annotations
 
@@ -13,13 +13,12 @@ from homeassistant.core import ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import selector
 
-from custom_components.pima_force.const import (
+from .const import (
     CONF_ZONES,
     DOMAIN,
     SERVICE_GET_ZONES,
     SERVICE_SET_ZONES,
 )
-
 from .coordinator import PimaForceDataUpdateCoordinator
 
 if TYPE_CHECKING:

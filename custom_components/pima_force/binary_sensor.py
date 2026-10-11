@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from custom_components.pima_force import PimaForceConfigEntry
+    from . import PimaForceConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -83,7 +83,7 @@ async def async_setup_entry(
 class PimaForceZoneBinarySensor(
     PimaForceEntity, binary_sensor.BinarySensorEntity, RestoreEntity
 ):
-    """Representation of the alert sensor base."""
+    """Binary sensor for a Pima Force zone."""
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
     _unrecorded_attributes = frozenset(
