@@ -59,34 +59,32 @@ class PimaForceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(_: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self._config_entry = config_entry
-
-    async def async_step_init(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle an options flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if self._port_in_use(user_input[CONF_PORT]):
                 errors[CONF_PORT] = "already_configured"
             else:
-                if self._config_entry.options[CONF_PORT] != user_input[CONF_PORT]:
+                if self.config_entry.options[CONF_PORT] != user_input[CONF_PORT]:
                     self.hass.config_entries.async_update_entry(
-                        self._config_entry, title=f"{TITLE} {user_input[CONF_PORT]}"
+                        self.config_entry, title=f"{TITLE} {user_input[CONF_PORT]}"
                     )
                 return self.async_create_entry(
-                    data={**self._config_entry.options, **user_input},
+                    data={**self.config_entry.options, **user_input},
                 )
 
-        values = {**self._config_entry.options, **(user_input or {})}
+        values = {**self.config_entry.options, **(user_input or {})}
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(
@@ -105,5 +103,5 @@ class OptionsFlowHandler(OptionsFlow):
         return any(
             entry.options.get(CONF_PORT) == port
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id != self._config_entry.entry_id
+            if entry.entry_id != self.config_entry.entry_id
         )
