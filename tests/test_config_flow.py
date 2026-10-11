@@ -294,3 +294,21 @@ async def test_options_flow_same_port_keeps_title(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_PORT: 5000, CONF_ZONES: new_zones}
     assert config_entry.title == f"{TITLE} 5000"
+
+
+async def test_options_flow_entry_without_zones(hass: HomeAssistant) -> None:
+    """Test the options flow saves for an entry created without zone names."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, title=f"{TITLE} 5000", options={CONF_PORT: 5000}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert _schema_default(result.get("data_schema"), CONF_ZONES) == []
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: 6000}
+    )
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_PORT: 6000, CONF_ZONES: []}
+    assert config_entry.title == f"{TITLE} 6000"

@@ -92,7 +92,7 @@ class OptionsFlowHandler(OptionsFlow):
                 {
                     probatio.Required(CONF_PORT, default=values[CONF_PORT]): cv.port,
                     probatio.Optional(
-                        CONF_ZONES, default=values.get(CONF_ZONES)
+                        CONF_ZONES, default=values.get(CONF_ZONES, [])
                     ): ZONES_SCHEMA,
                 }
             ),
