@@ -128,7 +128,9 @@ async def test_coordinator_stop_with_open_connection(
         hass, MockConfigEntry(domain=DOMAIN, options={CONF_PORT: port})
     )
     coordinator.async_update_listeners = MagicMock()
+    assert not coordinator.listening
     await coordinator.async_start()
+    assert coordinator.listening
 
     reader, writer = await asyncio.open_connection("127.0.0.1", port)
     writer.write(
@@ -139,6 +141,7 @@ async def test_coordinator_stop_with_open_connection(
     assert coordinator.zones == {32: True}
 
     await asyncio.wait_for(coordinator.async_stop(), 5)
+    assert not coordinator.listening
     assert await asyncio.wait_for(reader.read(), 5) == b""
     # Stopping again (e.g. unload after Home Assistant stopped) is a no-op.
     await asyncio.wait_for(coordinator.async_stop(), 5)

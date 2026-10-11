@@ -74,6 +74,12 @@ class PimaForceDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.async_update_listeners()
 
+    @property
+    def listening(self) -> bool:
+        """Return whether the SIA server is accepting connections."""
+        server = getattr(self._sia_client, "server", None)
+        return server is not None and bool(server.is_serving())
+
     async def async_start(self) -> None:
         """Start the SIA server."""
         await self._sia_client.async_start()

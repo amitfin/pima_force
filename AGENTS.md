@@ -24,6 +24,7 @@ custom_components/pima_force/
   entity.py         PimaForceEntity base (device info, has_entity_name)
   config_flow.py    user flow + options flow (port, ordered zone names, port-change confirmation)
   const.py          constants, including the ADM-CID codes
+  diagnostics.py    config entry diagnostics: state, options, listening, zone states
   services.yaml, icons.json, strings.json, translations/{en,he}.json
 tests/              pytest + pytest-homeassistant-custom-component
 scripts/            setup, lint, develop
