@@ -76,7 +76,7 @@ Home Assistant IP:port should be configured as a Central Monitoring Station (CMS
 
 ## Binary Sensors
 
-The integration creates a binary sensor for each zone. It skips zones with an empty name (but it takes empty zones into account for numbering correctly the rest of the zones).
+The integration creates a binary sensor for each zone. It skips zones with an empty name (but it takes empty zones into account for numbering correctly the rest of the zones). Clearing a zone's name, or removing zones from the end of the list, deletes the corresponding entities, including any customizations made to them.
 
 The `entity_id` has the format of `binary_sensor.pima_force_<port>_zone<#>`. For example: `binary_sensor.pima_force_10001_zone5`.
 

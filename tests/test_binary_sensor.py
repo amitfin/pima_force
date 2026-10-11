@@ -565,3 +565,44 @@ async def test_entity_services_update_zone_state(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+async def test_removed_zones_are_removed_from_registry(hass: HomeAssistant) -> None:
+    """Test entities of blanked or dropped zones are removed on reload."""
+    entry_id = "test_entry"
+    await _setup_entities(
+        hass,
+        entry_id,
+        [{CONF_NAME: "Front Door"}, {CONF_NAME: "Back Door"}, {CONF_NAME: "Garage"}],
+    )
+    config_entry = hass.config_entries.async_get_known_entry(entry_id)
+    registry = er.async_get(hass)
+    other = registry.async_get_or_create(
+        "binary_sensor", "other_integration", "other_unique_id"
+    )
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            **config_entry.options,
+            CONF_ZONES: [{CONF_NAME: "Front Door"}, {CONF_NAME: ""}],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert [
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(registry, entry_id)
+    ] == [f"{entry_id}_1"]
+    assert registry.async_get(other.entity_id) is not None
+    state = hass.states.get(f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone1")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert (
+        hass.states.get(f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone2")
+        is None
+    )
+    assert (
+        hass.states.get(f"binary_sensor.{DOMAIN}_{DEFAULT_LISTENING_PORT}_zone3")
+        is None
+    )

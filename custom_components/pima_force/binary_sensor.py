@@ -10,6 +10,7 @@ from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
 from homeassistant.const import CONF_NAME, CONF_PORT, STATE_ON
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -36,22 +37,34 @@ PARALLEL_UPDATES = 0
 SERVICE_SCHEMA = cv.make_entity_service_schema(None, extra=probatio.ALLOW_EXTRA)
 
 
+def _unique_id(config_entry: PimaForceConfigEntry, zone: int) -> str:
+    """Return the unique ID of a zone's entity."""
+    return f"{config_entry.entry_id}_{zone}"
+
+
 async def async_setup_entry(
-    _: HomeAssistant,
+    hass: HomeAssistant,
     config_entry: PimaForceConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    now = dt_util.now().isoformat()
-    async_add_entities(
-        PimaForceZoneBinarySensor(
-            config_entry,
-            index + 1,
-            zone[CONF_NAME],
-            now,
-        )
+    zones = {
+        index + 1: zone[CONF_NAME]
         for index, zone in enumerate(config_entry.options.get(CONF_ZONES, []))
         if zone.get(CONF_NAME)
+    }
+    unique_ids = {_unique_id(config_entry, zone) for zone in zones}
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entity.unique_id not in unique_ids:
+            entity_registry.async_remove(entity.entity_id)
+
+    now = dt_util.now().isoformat()
+    async_add_entities(
+        PimaForceZoneBinarySensor(config_entry, zone, name, now)
+        for zone, name in zones.items()
     )
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -77,7 +90,7 @@ class PimaForceZoneBinarySensor(
     ) -> None:
         """Initialize object with defaults."""
         super().__init__(config_entry)
-        self._attr_unique_id = f"{config_entry.entry_id}_{zone}"
+        self._attr_unique_id = _unique_id(config_entry, zone)
         self.entity_id = (
             f"binary_sensor.{DOMAIN}_{config_entry.options[CONF_PORT]}_zone{zone}"
         )
