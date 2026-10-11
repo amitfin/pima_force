@@ -154,7 +154,7 @@ version.
   Errors raised to users use translated exceptions (`exceptions` section).
 - New actions need entries in `services.yaml`, `icons.json`, and the
   `services` section of the strings, plus a README section.
-- Keep `README.md` in sync with behaviour (entity ID format, attributes,
+- Keep `README.md` in sync with behavior (entity ID format, attributes,
   actions).
 
 ## Release

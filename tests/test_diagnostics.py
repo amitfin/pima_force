@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 
 # The diagnostics HTTP API warns when optional compression libraries are missing.
-pytestmark = pytest.mark.allowed_logs(["zlib_ng and isal are not available"])
+pytestmark = pytest.mark.allowed_logs(["zlib_ng"])
 
 OPTIONS = {CONF_PORT: DEFAULT_LISTENING_PORT, CONF_ZONES: [{CONF_NAME: "Front Door"}]}
 
