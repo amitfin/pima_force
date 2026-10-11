@@ -146,5 +146,6 @@ async def config_entry_update_listener(
 
 async def async_unload_entry(hass: HomeAssistant, entry: PimaForceConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.coordinator.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.coordinator.async_stop()
+    return unloaded

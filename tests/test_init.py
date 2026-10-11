@@ -217,12 +217,17 @@ async def test_config_entry_update_listener(hass: HomeAssistant) -> None:
     )
 
 
-async def test_async_unload_entry(hass: HomeAssistant) -> None:
-    """Test async_unload_entry stops the coordinator."""
+@pytest.mark.parametrize("unloaded", [True, False])
+async def test_async_unload_entry(hass: HomeAssistant, *, unloaded: bool) -> None:
+    """Test async_unload_entry stops the coordinator only if platforms unload."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     coordinator = MagicMock()
     coordinator.async_stop = AsyncMock()
     config_entry.runtime_data = PimaForceRuntimeData(coordinator=coordinator)
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=unloaded)
 
-    assert await async_unload_entry(hass, config_entry)
-    coordinator.async_stop.assert_awaited_once()
+    assert await async_unload_entry(hass, config_entry) is unloaded
+    hass.config_entries.async_unload_platforms.assert_awaited_once_with(
+        config_entry, (Platform.BINARY_SENSOR,)
+    )
+    assert coordinator.async_stop.await_count == int(unloaded)
