@@ -73,7 +73,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration."""
 
     @callback
-    async def async_get_zones(call: ServiceCall) -> ServiceResponse:
+    def async_get_zones(call: ServiceCall) -> ServiceResponse:
         """Return zone list."""
         config_entry = _async_get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         return {
@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
         }
 
     @callback
-    async def async_set_zones(call: ServiceCall) -> None:
+    def async_set_zones(call: ServiceCall) -> None:
         """Set zone list for a config entry."""
         config_entry = _async_get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         hass.config_entries.async_update_entry(
