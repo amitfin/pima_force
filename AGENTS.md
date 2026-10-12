@@ -24,7 +24,7 @@ custom_components/pima_force/
   entity.py         PimaForceEntity base (device info, has_entity_name)
   config_flow.py    user flow + options flow (port, ordered zone names, port-change confirmation)
   const.py          constants, including the ADM-CID codes
-  diagnostics.py    config entry diagnostics: state, options, listening, zone states
+  diagnostics.py    config entry diagnostics: state, options, listening, last message, zone states
   services.yaml, icons.json, strings.json, translations/{en,he}.json
 tests/              pytest + pytest-homeassistant-custom-component
 scripts/            setup, lint, develop
@@ -57,8 +57,16 @@ config/             dev HA config (only configuration.yaml is tracked)
 7. A sensor writes state **only when its zone's value changes**, and then
    updates `last_set` and either `last_open` or `last_close`
    (`_apply_zone_state`).
-8. Any options change triggers a full entry reload through the update listener.
-9. Unload unloads the platforms first, and stops the SIA server only if that
+8. Every message `pysiaalarm` acknowledges, including the panel's keep-alive (a
+   SIA `NULL` message, parsed as code `RP` on zone 0), updates
+   `coordinator.last_message`. Messages it rejects (NAK, or DUH for unknown
+   codes) never reach the integration. Each message also restarts a 30-minute
+   watchdog (`NO_MESSAGES_TIMEOUT`). When the watchdog fires, it raises the
+   `no_messages` repair issue (non-persistent, not fixable, ERROR), and the next
+   message removes it. Stopping the server cancels the watchdog but keeps an
+   existing issue; the integration never deletes it on unload or removal.
+9. Any options change triggers a full entry reload through the update listener.
+10. Unload unloads the platforms first, and stops the SIA server only if that
    succeeds.
 
 The coordinator is a plain listener hub (`DataUpdateCoordinator[None]`): it has

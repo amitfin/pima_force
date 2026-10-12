@@ -54,6 +54,12 @@
             "message": "Unable to listen on port {port}: {error}"
         }
     },
+    "issues": {
+        "no_messages": {
+            "title": "No messages from the alarm system on port {port}",
+            "description": "Home Assistant hasn't received any message from the alarm system on port {port} for {minutes} minutes, not even a keep-alive.\n\nCheck that the alarm system is powered and connected to the network, and that its keep-alive (called Supervision in some versions) is enabled and set to 15 minutes or less. See \"Learn more\" for where to find it.\n\nThis issue is removed automatically when a message is received."
+        }
+    },
     "services": {
         "get_zones": {
             "name": "Get zones",

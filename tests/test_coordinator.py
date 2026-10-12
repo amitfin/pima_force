@@ -2,14 +2,20 @@
 
 import asyncio
 import socket
+from datetime import timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
 from homeassistant.const import CONF_PORT
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 from pysiaalarm.aio.client import SIAClient
 from pysiaalarm.event import SIAEvent
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.pima_force.const import (
     ADM_CID_EVENT_QUALIFIER_CLOSE,
@@ -20,7 +26,11 @@ from custom_components.pima_force.const import (
 )
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
 
+# A keep-alive (SIA NULL message) as received from a Pima Force panel.
+KEEP_ALIVE_LINE = 'B46F002B"NULL"1632R1L0#AAAAAA[]_17:40:34,10-11-2026'
+
 if TYPE_CHECKING:
+    from freezegun.api import FrozenDateTimeFactory
     from homeassistant.core import HomeAssistant
 
 
@@ -157,3 +167,60 @@ async def test_coordinator_config_entry(hass: HomeAssistant) -> None:
     coordinator = PimaForceDataUpdateCoordinator(hass, config_entry)
 
     assert coordinator.config_entry is config_entry
+
+
+async def test_no_messages_issue(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a repair issue is raised after 30 minutes without any message."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_PORT: DEFAULT_LISTENING_PORT}
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = config_entry.runtime_data.coordinator
+    issue_registry = ir.async_get(hass)
+    issue_id = f"no_messages_{config_entry.entry_id}"
+
+    async def advance(minutes: int) -> None:
+        freezer.tick(timedelta(minutes=minutes))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    await advance(29)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    await advance(1)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "no_messages"
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "port": str(DEFAULT_LISTENING_PORT),
+        "minutes": "30",
+    }
+
+    await coordinator.process_event(SIAEvent.from_line(KEEP_ALIVE_LINE))
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert coordinator.last_message == dt_util.utcnow()
+    assert coordinator.zones == {}
+
+    await advance(20)
+    await coordinator.process_event(SIAEvent.from_line(KEEP_ALIVE_LINE))
+    await advance(20)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    await advance(10)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "port": str(DEFAULT_LISTENING_PORT),
+        "minutes": "30",
+    }
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    # A message processed after the server stopped doesn't start a new timer.
+    await coordinator.process_event(SIAEvent.from_line(KEEP_ALIVE_LINE))
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    await advance(60)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

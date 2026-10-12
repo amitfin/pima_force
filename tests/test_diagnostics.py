@@ -43,7 +43,8 @@ async def test_diagnostics_loaded(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    await config_entry.runtime_data.coordinator.process_event(
+    coordinator = config_entry.runtime_data.coordinator
+    await coordinator.process_event(
         SIAEvent(
             event_type=ADM_CID_PIMA_ZONE_STATUS_CODE,
             event_qualifier=ADM_CID_EVENT_QUALIFIER_OPEN,
@@ -51,10 +52,12 @@ async def test_diagnostics_loaded(
         )
     )
 
+    assert coordinator.last_message is not None
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "state": "loaded",
         "options": OPTIONS,
         "listening": True,
+        "last_message": coordinator.last_message.isoformat(),
         "zone_states": {"1": True},
     }
 
@@ -75,6 +78,7 @@ async def test_diagnostics_port_in_use(
         "state": "setup_retry",
         "options": OPTIONS,
         "listening": False,
+        "last_message": None,
         "zone_states": {},
     }
 

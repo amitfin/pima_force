@@ -17,5 +17,10 @@ async def async_get_config_entry_diagnostics(
     data: dict[str, Any] = {"state": entry.state.value, "options": dict(entry.options)}
     if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
         data["listening"] = runtime_data.coordinator.listening
+        data["last_message"] = (
+            last.isoformat()
+            if (last := runtime_data.coordinator.last_message)
+            else None
+        )
         data["zone_states"] = runtime_data.coordinator.zones
     return data

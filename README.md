@@ -73,6 +73,7 @@ Home Assistant IP:port should be configured as a Central Monitoring Station (CMS
 3. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Communication Paths => Network (Ethernet)`:
     - `Account ID length`: change it from 16 to 6 so it matches the length of the account ID entered in the previous step.
     - `Disable encryption`: this is not checked by default. Press enter (`⏎`) to disable encryption (which is not supported).
+    - `Keep-alive` (called `Supervision` in some versions): make sure it's enabled and set to 15 minutes or less. Home Assistant raises a repair issue if it receives no message from the alarm for 30 minutes.
 4. `System Configuration => CMS & Communications => Monitoring Stations => CMS 1 => Event Reporting`:
     - `Zone/output Toggle`: this is not checked by default. Press enter (`⏎`) to set the alarm to send events on zone status changes. Without this option selected, the relevant events won't be sent and the integration will not be notified when a zone is open or closed.
 
