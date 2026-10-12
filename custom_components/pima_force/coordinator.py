@@ -64,7 +64,7 @@ class PimaForceDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )  # pyright: ignore[reportAbstractUsage]
 
     async def process_event(self, event: SIAEvent) -> None:
-        """Process a message from the panel, including keep-alives."""
+        """Process a message from the panel, including keep-alive messages."""
         self._last_message = dt_util.utcnow()
         ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
         if self._cancel_watchdog is not None:
