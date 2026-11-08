@@ -12,10 +12,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 from pysiaalarm.aio.client import SIAClient
 from pysiaalarm.event import SIAEvent
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-)
 
 from custom_components.pima_force.const import (
     ADM_CID_EVENT_QUALIFIER_CLOSE,
@@ -25,6 +21,10 @@ from custom_components.pima_force.const import (
     DOMAIN,
 )
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 # A keep-alive (SIA NULL message) as received from a Pima Force panel.
 KEEP_ALIVE_LINE = 'B46F002B"NULL"1632R1L0#AAAAAA[]_17:40:34,10-11-2026'

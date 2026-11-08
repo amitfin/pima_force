@@ -1,0 +1,35 @@
+"""
+Test helpers from Home Assistant's pytest-homeassistant package.
+
+pytest-homeassistant exists only from Home Assistant 2026.11. Older versions (the
+minimum-version CI job) use the discontinued pytest-homeassistant-custom-component.
+"""
+
+try:
+    from pytest_homeassistant.common import (
+        MockConfigEntry,
+        async_fire_time_changed,
+        mock_restore_cache,
+    )
+    from pytest_homeassistant.components.diagnostics import (
+        get_diagnostics_for_config_entry,
+    )
+except ModuleNotFoundError as err:  # Home Assistant 2026.10 and older.
+    # A broken pytest_homeassistant install must fail with its own error.
+    if err.name != "pytest_homeassistant":
+        raise
+    from pytest_homeassistant_custom_component.common import (  # pyright: ignore[reportMissingImports]
+        MockConfigEntry,
+        async_fire_time_changed,
+        mock_restore_cache,
+    )
+    from pytest_homeassistant_custom_component.components.diagnostics import (  # pyright: ignore[reportMissingImports]
+        get_diagnostics_for_config_entry,
+    )
+
+__all__ = [
+    "MockConfigEntry",
+    "async_fire_time_changed",
+    "get_diagnostics_for_config_entry",
+    "mock_restore_cache",
+]

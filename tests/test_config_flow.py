@@ -6,7 +6,6 @@ import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force.config_flow import (
     OptionsFlowHandler,
@@ -18,6 +17,7 @@ from custom_components.pima_force.const import (
     DOMAIN,
     TITLE,
 )
+from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from unittest.mock import MagicMock

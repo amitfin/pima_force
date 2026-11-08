@@ -15,9 +15,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.exceptions import ServiceValidationError
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-)
 
 from custom_components.pima_force import (
     PimaForceRuntimeData,
@@ -32,6 +29,9 @@ from custom_components.pima_force.const import (
     DOMAIN,
     SERVICE_GET_ZONES,
     SERVICE_SET_ZONES,
+)
+from tests.common import (
+    MockConfigEntry,
 )
 
 if TYPE_CHECKING:

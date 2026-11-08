@@ -45,7 +45,10 @@ jobs:
       matrix:
         include:
           # Its version pins the Home Assistant version. Keep the minimum in sync
-          # with "homeassistant" in hacs.json.
+          # with "homeassistant" in hacs.json. pytest-homeassistant exists only from
+          # Home Assistant 2026.11, so the minimum uses the discontinued
+          # pytest-homeassistant-custom-component; "latest" installs
+          # pytest-homeassistant (see scripts/setup).
           - homeassistant: minimum
             pytest-homeassistant-custom-component: "0.13.371"
           - homeassistant: latest
