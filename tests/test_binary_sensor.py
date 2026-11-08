@@ -12,10 +12,6 @@ from homeassistant.core import State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from pysiaalarm.event import SIAEvent
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    mock_restore_cache,
-)
 
 from custom_components.pima_force import PimaForceRuntimeData
 from custom_components.pima_force.binary_sensor import PimaForceZoneBinarySensor
@@ -33,6 +29,10 @@ from custom_components.pima_force.const import (
     SERVICE_SET_OPEN,
 )
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+)
 
 if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory

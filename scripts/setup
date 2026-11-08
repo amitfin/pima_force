@@ -6,7 +6,21 @@ cd "$(dirname "$0")/.."
 
 python3 -m pip install --upgrade pip --root-user-action ignore
 python3 -m pip install uv --root-user-action ignore
-uv pip install --system --prerelease allow "pytest-homeassistant-custom-component${1:+==$1}"
+# Without an argument: Home Assistant core's pytest-homeassistant, versioned like
+# Home Assistant. The lower bound skips an unrelated 0.1.x package of the same name
+# (picked on Python older than 3.14.2). It must not be installed together with the
+# discontinued pytest-homeassistant-custom-component (e.g. in an existing
+# devcontainer). pytest-cov is required by the --cov options in pytest.ini.
+# With an argument (the minimum-version CI job): that version of the discontinued
+# pytest-homeassistant-custom-component, since pytest-homeassistant exists only from
+# Home Assistant 2026.11.
+if [ -n "$1" ]; then
+  uv pip uninstall --system pytest-homeassistant
+  uv pip install --system "pytest-homeassistant-custom-component==$1"
+else
+  uv pip uninstall --system pytest-homeassistant-custom-component
+  uv pip install --system --prerelease allow "pytest-homeassistant>=2026.11.0" pytest-cov
+fi
 uv pip install --system --upgrade -r requirements.txt
 
 prek install

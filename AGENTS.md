@@ -26,7 +26,7 @@ custom_components/pima_force/
   const.py          constants, including the ADM-CID codes
   diagnostics.py    config entry diagnostics: state, options, listening, last message, zone states
   services.yaml, icons.json, strings.json, translations/{en,he}.json
-tests/              pytest + pytest-homeassistant-custom-component
+tests/              pytest + pytest-homeassistant (HA core's package)
 scripts/            setup, lint, develop
 config/             dev HA config (only configuration.yaml is tracked)
 ```
@@ -104,7 +104,7 @@ Zone state lives in `coordinator.zones`.
 ## Commands
 
 ```bash
-scripts/setup [ver]    # install deps (uv), pytest-homeassistant-custom-component (latest, or ==ver), prek hooks
+scripts/setup [ver]    # install deps (uv), pytest-homeassistant (latest) or pytest-homeassistant-custom-component==ver, prek hooks
 scripts/lint           # ruff format + ruff check --fix + mypy --strict
 scripts/lint --no-fix  # CI mode
 pytest                 # runs with --cov-fail-under=100 (pytest.ini)
@@ -117,10 +117,15 @@ also runs hassfest and HACS validation). Ruff also formats Python code blocks
 inside Markdown files.
 
 CI runs the tests twice: against the minimum Home Assistant version and against
-the latest. Each `pytest-homeassistant-custom-component` version pins one exact
-Home Assistant version. The minimum job installs the plugin version from the
+the latest. Each plugin version pins one exact Home Assistant version. The latest
+job installs HA core's `pytest-homeassistant` (2026.11+, released with HA, same
+version numbers, requires Python 3.14.2+). It replaced
+`pytest-homeassistant-custom-component`, discontinued after 0.13.375 (HA
+2026.10.4). The minimum job installs the old plugin version from the
 `validate.yml` matrix, and fails if that doesn't install the `hacs.json`
-version.
+version. When the minimum is raised to 2026.11 or later, switch that job to
+`pytest-homeassistant` and drop the fallback in `tests/common.py` and the
+`enable_custom_integrations` wrapper in `tests/conftest.py`.
 
 ## Testing conventions
 
@@ -133,7 +138,16 @@ version.
   `async_start` / `async_stop`. To exercise the coordinator callback, patch
   `custom_components.pima_force.coordinator.SIAClient` with a factory. The
   callback is the 4th constructor argument.
-- Custom integrations are auto-enabled. Use `MockConfigEntry(domain=DOMAIN,
+- Test files import helpers (`MockConfigEntry`, …) from `tests/common.py`. It
+  re-exports them from `pytest_homeassistant`, falling back to
+  `pytest_homeassistant_custom_component` only when `pytest_homeassistant` itself
+  is missing (the minimum job). Add new helpers there. `TYPE_CHECKING`-only
+  imports (e.g. `pytest_homeassistant.typing`) need no fallback. `pytest.ini`
+  follows the package's recommended config, including `-p no:respx` (HA must
+  install its httpx alias before respx is imported). The `hass` fixture uses
+  `tests/testing_config` as its config directory (git-ignored).
+- Custom integrations are auto-enabled (the `conftest.py` wrapper is needed only
+  by the old plugin). Use `MockConfigEntry(domain=DOMAIN,
   options={CONF_PORT: ..., CONF_ZONES: [...]})`. All configuration lives in
   `options`; `data` is always `{}`.
 - Use `freezer` for timestamps; `dt_util.now()` uses HA's configured time zone,
@@ -174,4 +188,5 @@ bump `manifest.json` `version` by hand. When raising the minimum HA version,
 update `hacs.json` **and** the `minimum` entry's
 `pytest-homeassistant-custom-component` version in
 `.github/workflows/validate.yml`. Use the plugin release that pins that Home
-Assistant version.
+Assistant version (from 2026.11 on, `pytest-homeassistant` of the same version;
+see "Commands").

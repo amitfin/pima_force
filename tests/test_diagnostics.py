@@ -7,10 +7,6 @@ from typing import TYPE_CHECKING
 import pytest
 from homeassistant.const import CONF_NAME, CONF_PORT
 from pysiaalarm.event import SIAEvent
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-)
 
 from custom_components.pima_force.const import (
     ADM_CID_EVENT_QUALIFIER_OPEN,
@@ -19,12 +15,13 @@ from custom_components.pima_force.const import (
     DEFAULT_LISTENING_PORT,
     DOMAIN,
 )
+from tests.common import MockConfigEntry, get_diagnostics_for_config_entry
 
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from homeassistant.core import HomeAssistant
-    from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
+    from pytest_homeassistant.typing import ClientSessionGenerator
 
 # The diagnostics HTTP API warns when optional compression libraries are missing.
 pytestmark = pytest.mark.allowed_logs(["zlib_ng"])

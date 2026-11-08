@@ -3,7 +3,6 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_PORT
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pima_force import PimaForceRuntimeData
 from custom_components.pima_force.const import (
@@ -12,6 +11,7 @@ from custom_components.pima_force.const import (
 )
 from custom_components.pima_force.coordinator import PimaForceDataUpdateCoordinator
 from custom_components.pima_force.entity import PimaForceEntity
+from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
